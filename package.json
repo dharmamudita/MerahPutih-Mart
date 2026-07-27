@@ -1,0 +1,30 @@
+{
+  "name": "koperasi-desa-merah-putih",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Sistem Manajemen Koperasi Desa Merah Putih - KopDes Management & MerahPutih Mart",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "turbo run dev",
+    "dev:admin": "turbo run dev --filter=web-admin",
+    "dev:customer": "turbo run dev --filter=web-customer",
+    "dev:api": "turbo run dev --filter=api",
+    "build": "turbo run build",
+    "db:push": "npm run db:push --workspace=packages/database",
+    "db:migrate": "npm run migrate --workspace=packages/database",
+    "db:seed": "npm run seed --workspace=packages/database",
+    "db:studio": "npm run studio --workspace=packages/database",
+    "lint": "turbo run lint",
+    "clean": "turbo run clean"
+  },
+  "devDependencies": {
+    "turbo": "^2.5.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "packageManager": "npm@10.0.0"
+}
