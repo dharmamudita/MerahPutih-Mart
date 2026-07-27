@@ -10,10 +10,7 @@ export default function RootLayout({ children }) {
   return (
     <html lang="id">
       <body>
-        <Navbar />
-        <main className="container" style={{ marginTop: '24px' }}>
-          {children}
-        </main>
+        {children}
       </body>
     </html>
   )
