@@ -10,6 +10,8 @@ const authRoutes = require('./routes/auth.routes');
 const categoryRoutes = require('./routes/category.routes');
 const productRoutes = require('./routes/product.routes');
 const orderRoutes = require('./routes/order.routes');
+const posRoutes = require('./routes/pos.routes');
+const inventoryRoutes = require('./routes/inventory.routes');
 
 const app = express();
 const server = http.createServer(app);
@@ -34,6 +36,8 @@ app.use('/api/auth', authRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/orders', orderRoutes);
+app.use('/api/pos', posRoutes);
+app.use('/api/inventory', inventoryRoutes);
 
 app.get('/', (req, res) => {
   res.json({ message: 'Welcome to KopDes Merah Putih Shared API' });
