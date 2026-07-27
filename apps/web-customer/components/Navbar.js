@@ -1,8 +1,19 @@
+'use client';
+import { useState, useEffect } from 'react';
 import styles from './Navbar.module.css';
 import Link from 'next/link';
 import { Search, ShoppingCart, User, MapPin } from 'lucide-react';
+import useCartStore from '../store/cartStore';
 
 export default function Navbar() {
+  const [mounted, setMounted] = useState(false);
+  const totalItems = useCartStore((state) => state.getTotalItems());
+
+  // Prevent hydration mismatch by only rendering cart count after mount
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   return (
     <div className={styles.navbarWrapper}>
       {/* Top bar for location and promos */}
@@ -50,7 +61,9 @@ export default function Navbar() {
           <div className={styles.actions}>
             <Link href="/cart" className={styles.cartBtn}>
               <ShoppingCart size={24} />
-              <span className={styles.cartBadge}>2</span>
+              {mounted && totalItems > 0 && (
+                <span className={styles.cartBadge}>{totalItems}</span>
+              )}
             </Link>
             <div className={styles.divider}></div>
             <Link href="/login" className={`btn btn-outline ${styles.loginBtn}`}>Masuk</Link>

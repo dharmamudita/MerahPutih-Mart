@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import AddToCartButton from '../components/AddToCartButton';
 
 async function getProducts() {
   try {
@@ -83,9 +84,7 @@ export default async function Home() {
                       Rp {product.sellPrice.toLocaleString('id-ID')}
                       {product.unit && <span style={{ fontSize: '12px', color: 'var(--neutral-500)', fontWeight: 'normal' }}> /{product.unit.symbol}</span>}
                     </p>
-                    <button className="btn btn-outline" style={{ width: '100%', marginTop: '16px' }}>
-                      Tambah
-                    </button>
+                    <AddToCartButton product={product} />
                   </div>
                 </div>
               );
