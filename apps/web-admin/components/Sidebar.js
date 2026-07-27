@@ -10,7 +10,8 @@ import {
   PieChart, 
   FileText, 
   Settings,
-  LogOut
+  LogOut,
+  ShoppingCart
 } from 'lucide-react';
 
 export default function Sidebar({ role = 'SUPER_ADMIN' }) {
@@ -28,6 +29,7 @@ export default function Sidebar({ role = 'SUPER_ADMIN' }) {
 
   const kopdesAdminMenus = [
     { title: 'Dashboard', icon: <Home size={20} />, href: '/dashboard' },
+    { title: 'Kasir (POS)', icon: <ShoppingCart size={20} />, href: '/pos' },
     { title: 'Manajemen Produk', icon: <Tag size={20} />, href: '/products' },
     { title: 'Kategori', icon: <Database size={20} />, href: '/categories' },
     { title: 'Gudang & Stok', icon: <Store size={20} />, href: '/warehouse' },
