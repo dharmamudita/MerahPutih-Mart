@@ -1,6 +1,6 @@
 import styles from './Footer.module.css';
 import Link from 'next/link';
-import { MapPin, Phone, Mail, Facebook, Instagram, Twitter } from 'lucide-react';
+import { MapPin, Phone, Mail } from 'lucide-react';
 
 export default function Footer() {
   return (
@@ -16,11 +16,6 @@ export default function Footer() {
           <p className={styles.description}>
             Aplikasi belanja sembako murah, segar, dan berkualitas langsung dari Koperasi Desa Merah Putih. Belanja cerdas, warga sejahtera.
           </p>
-          <div className={styles.socials}>
-            <a href="#" className={styles.socialIcon}><Facebook size={20} /></a>
-            <a href="#" className={styles.socialIcon}><Instagram size={20} /></a>
-            <a href="#" className={styles.socialIcon}><Twitter size={20} /></a>
-          </div>
         </div>
 
         <div className={styles.linkSection}>

@@ -1,3 +1,5 @@
+import Link from 'next/link';
+
 export default function Home() {
   return (
     <div>
@@ -8,8 +10,8 @@ export default function Home() {
         </p>
         
         <div style={{ display: 'flex', gap: '16px', justifyContent: 'center' }}>
-          <button className="btn btn-primary">Dashboard Super Admin</button>
-          <button className="btn btn-outline">Dashboard Admin Kopdes</button>
+          <Link href="/dashboard" className="btn btn-primary">Dashboard Super Admin</Link>
+          <Link href="/dashboard" className="btn btn-outline">Dashboard Admin Kopdes</Link>
         </div>
       </div>
     </div>
