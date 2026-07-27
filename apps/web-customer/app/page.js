@@ -1,13 +1,20 @@
 import Link from 'next/link';
 
-export default function Home() {
-  const products = [
-    { id: 1, name: 'Beras Setra Ramos 5kg', price: 65000, category: 'Sembako', image: '🌾' },
-    { id: 2, name: 'Minyak Goreng Bimoli 2L', price: 34000, category: 'Sembako', image: '🛢️' },
-    { id: 3, name: 'Gula Pasir Gulaku 1kg', price: 16500, category: 'Sembako', image: '🧂' },
-    { id: 4, name: 'Indomie Kari Ayam', price: 3000, category: 'Snack & Minuman', image: '🍜' },
-    { id: 5, name: 'Telur Ayam Negeri 1kg', price: 28000, category: 'Sembako', image: '🥚' },
-  ];
+async function getProducts() {
+  try {
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+    const res = await fetch(`${apiUrl}/products?limit=8`, { cache: 'no-store' });
+    if (!res.ok) return [];
+    const json = await res.json();
+    return json.data || [];
+  } catch (error) {
+    console.error("Gagal mengambil data produk:", error);
+    return [];
+  }
+}
+
+export default async function Home() {
+  const products = await getProducts();
 
   return (
     <div>
@@ -44,23 +51,47 @@ export default function Home() {
           <Link href="/belanja" style={{ color: 'var(--primary-600)', fontWeight: '600' }}>Lihat Semua &rarr;</Link>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '24px' }}>
-          {products.map(product => (
-            <div key={product.id} style={{ backgroundColor: 'var(--white)', border: '1px solid var(--neutral-200)', borderRadius: '12px', overflow: 'hidden', transition: 'transform 0.2s, box-shadow 0.2s', cursor: 'pointer' }} onMouseOver={(e) => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = 'var(--shadow-md)'; }} onMouseOut={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}>
-              <div style={{ height: '160px', backgroundColor: 'var(--neutral-100)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '64px' }}>
-                {product.image}
-              </div>
-              <div style={{ padding: '16px' }}>
-                <span style={{ fontSize: '12px', color: 'var(--primary-600)', fontWeight: '600', marginBottom: '4px', display: 'block' }}>{product.category}</span>
-                <h3 style={{ fontSize: '16px', fontWeight: '600', marginBottom: '8px', color: 'var(--neutral-900)' }}>{product.name}</h3>
-                <p style={{ fontSize: '18px', fontWeight: '700', color: 'var(--danger)' }}>Rp {product.price.toLocaleString('id-ID')}</p>
-                <button className="btn btn-outline" style={{ width: '100%', marginTop: '16px' }}>
-                  Tambah
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
+        {products.length === 0 ? (
+          <div style={{ padding: '40px', textAlign: 'center', backgroundColor: 'var(--neutral-50)', borderRadius: '12px' }}>
+            <span style={{ fontSize: '32px', marginBottom: '16px', display: 'block' }}>📦</span>
+            <h3 style={{ fontSize: '18px', fontWeight: '600', color: 'var(--neutral-700)' }}>Belum ada produk</h3>
+            <p style={{ color: 'var(--neutral-500)' }}>Produk akan segera tersedia di KopDes ini.</p>
+          </div>
+        ) : (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '24px' }}>
+            {products.map(product => {
+              // Mengambil image pertama jika ada, atau fallback emoji
+              const imageUrl = product.images && product.images.length > 0 ? product.images[0].url : null;
+              
+              return (
+                <div key={product.id} style={{ backgroundColor: 'var(--white)', border: '1px solid var(--neutral-200)', borderRadius: '12px', overflow: 'hidden', transition: 'transform 0.2s, box-shadow 0.2s', cursor: 'pointer' }} onMouseOver={(e) => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = 'var(--shadow-md)'; }} onMouseOut={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}>
+                  <div style={{ height: '180px', backgroundColor: 'var(--neutral-100)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '64px', overflow: 'hidden' }}>
+                    {imageUrl ? (
+                      <img src={imageUrl} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    ) : (
+                      '🌾' // Fallback image icon
+                    )}
+                  </div>
+                  <div style={{ padding: '16px' }}>
+                    <span style={{ fontSize: '12px', color: 'var(--primary-600)', fontWeight: '600', marginBottom: '4px', display: 'block' }}>
+                      {product.category?.name || 'Lainnya'}
+                    </span>
+                    <h3 style={{ fontSize: '16px', fontWeight: '600', marginBottom: '8px', color: 'var(--neutral-900)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {product.name}
+                    </h3>
+                    <p style={{ fontSize: '18px', fontWeight: '700', color: 'var(--danger)' }}>
+                      Rp {product.sellPrice.toLocaleString('id-ID')}
+                      {product.unit && <span style={{ fontSize: '12px', color: 'var(--neutral-500)', fontWeight: 'normal' }}> /{product.unit.symbol}</span>}
+                    </p>
+                    <button className="btn btn-outline" style={{ width: '100%', marginTop: '16px' }}>
+                      Tambah
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </section>
 
       {/* Value Proposition */}
