@@ -1,0 +1,985 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ==========================================
+// AUTH & USERS
+// ==========================================
+
+enum UserRole {
+  SUPER_ADMIN
+  ADMIN_KOPDES
+  KASIR
+  OPERATOR_GUDANG
+  PELANGGAN
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  BLOCKED
+}
+
+model User {
+  id              String     @id @default(cuid())
+  email           String     @unique
+  password        String
+  name            String
+  phone           String?
+  avatar          String?    // Cloudinary URL
+  role            UserRole   @default(PELANGGAN)
+  status          UserStatus @default(ACTIVE)
+  emailVerified   Boolean    @default(false)
+  twoFactorEnabled Boolean   @default(false)
+  twoFactorSecret String?
+  lastLoginAt     DateTime?
+  lastLoginIp     String?
+  loginAttempts   Int        @default(0)
+  lockedUntil     DateTime?
+  kopdesId        String?
+  kopdes          Kopdes?    @relation(fields: [kopdesId], references: [id])
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+
+  // Relations
+  sessions        Session[]
+  auditLogs       AuditLog[]
+  loginHistory    LoginHistory[]
+  cashierShifts   CashierShift[]
+  notifications   Notification[]
+  customerProfile Customer?
+  transactions    Transaction[]
+  orders          Order[]
+  reviews         ProductReview[]
+  wishlists       Wishlist[]
+  pointTransactions PointTransaction[]
+  deposits        DailyDeposit[]
+  depositVerifications DepositVerification[]
+
+  @@map("users")
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String   @unique
+  device    String?
+  ipAddress String?
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@map("sessions")
+}
+
+model LoginHistory {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ipAddress String?
+  device    String?
+  browser   String?
+  os        String?
+  location  String?
+  success   Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  @@map("login_history")
+}
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  userId      String?
+  user        User?    @relation(fields: [userId], references: [id])
+  action      String   // CREATE, UPDATE, DELETE, LOGIN, LOGOUT, etc.
+  entity      String   // Table/model name
+  entityId    String?
+  oldData     Json?
+  newData     Json?
+  ipAddress   String?
+  description String?
+  kopdesId    String?
+  kopdes      Kopdes?  @relation(fields: [kopdesId], references: [id])
+  createdAt   DateTime @default(now())
+
+  @@map("audit_logs")
+}
+
+// ==========================================
+// KOPDES (KOPERASI DESA)
+// ==========================================
+
+enum KopdesStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+}
+
+model Kopdes {
+  id              String       @id @default(cuid())
+  code            String       @unique // Kode unik Kopdes
+  name            String
+  description     String?
+  photo           String?      // Cloudinary URL
+  address         String
+  province        String
+  city            String
+  district        String
+  village         String
+  postalCode      String?
+  latitude        Float?
+  longitude       Float?
+  phone           String?
+  email           String?
+  operationalHours Json?       // { mon: "08:00-17:00", tue: "08:00-17:00", ... }
+  status          KopdesStatus @default(ACTIVE)
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  // Relations
+  users           User[]
+  products        Product[]
+  categories      Category[]
+  suppliers       Supplier[]
+  transactions    Transaction[]
+  orders          Order[]
+  cashFlows       CashFlow[]
+  deposits        DailyDeposit[]
+  promotions      Promotion[]
+  vouchers        Voucher[]
+  auditLogs       AuditLog[]
+  notifications   Notification[]
+  stockMovements  StockMovement[]
+  stockOpnames    StockOpname[]
+  cashierShifts   CashierShift[]
+  purchases       Purchase[]
+  customers       Customer[]
+  banners         Banner[]
+  kopdesMembers   KopdesMember[]
+  expenses        Expense[]
+
+  @@map("kopdes")
+}
+
+// ==========================================
+// PRODUCTS
+// ==========================================
+
+model Category {
+  id          String    @id @default(cuid())
+  name        String
+  slug        String
+  icon        String?   // Cloudinary URL
+  description String?
+  parentId    String?
+  parent      Category? @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children    Category[] @relation("CategoryHierarchy")
+  kopdesId    String?
+  kopdes      Kopdes?   @relation(fields: [kopdesId], references: [id])
+  isGlobal    Boolean   @default(false)  // true = master data dari pusat
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  products    Product[]
+
+  @@unique([slug, kopdesId])
+  @@map("categories")
+}
+
+model Brand {
+  id        String    @id @default(cuid())
+  name      String    @unique
+  logo      String?   // Cloudinary URL
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  products  Product[]
+
+  @@map("brands")
+}
+
+model Unit {
+  id        String    @id @default(cuid())
+  name      String    @unique  // pcs, kg, liter, dus, etc.
+  symbol    String
+  createdAt DateTime  @default(now())
+
+  products  Product[]
+
+  @@map("units")
+}
+
+model Product {
+  id              String    @id @default(cuid())
+  sku             String
+  barcode         String?
+  qrCode          String?
+  name            String
+  slug            String
+  description     String?
+  buyPrice        Float     @default(0)
+  sellPrice       Float     @default(0)
+  discount        Float     @default(0)   // Percentage
+  discountPrice   Float?                   // Fixed discount price
+  weight          Float?
+  taxRate         Float     @default(0)
+  stockQuantity   Int       @default(0)
+  minStock        Int       @default(5)
+  maxStock        Int?
+  isActive        Boolean   @default(true)
+  isFeatured      Boolean   @default(false)
+  categoryId      String?
+  category        Category? @relation(fields: [categoryId], references: [id])
+  brandId         String?
+  brand           Brand?    @relation(fields: [brandId], references: [id])
+  unitId          String?
+  unit            Unit?     @relation(fields: [unitId], references: [id])
+  kopdesId        String
+  kopdes          Kopdes    @relation(fields: [kopdesId], references: [id])
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // Relations
+  images          ProductImage[]
+  reviews         ProductReview[]
+  transactionItems TransactionItem[]
+  orderItems      OrderItem[]
+  stockMovements  StockMovement[]
+  wishlists       Wishlist[]
+  purchaseItems   PurchaseItem[]
+  flashSaleItems  FlashSaleItem[]
+
+  @@unique([sku, kopdesId])
+  @@unique([slug, kopdesId])
+  @@map("products")
+}
+
+model ProductImage {
+  id        String   @id @default(cuid())
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  url       String   // Cloudinary URL
+  publicId  String   // Cloudinary public ID for deletion
+  isPrimary Boolean  @default(false)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+
+  @@map("product_images")
+}
+
+model ProductReview {
+  id        String   @id @default(cuid())
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  rating    Int      // 1-5
+  comment   String?
+  images    Json?    // Array of Cloudinary URLs
+  isVisible Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([productId, userId])
+  @@map("product_reviews")
+}
+
+// ==========================================
+// INVENTORY / GUDANG
+// ==========================================
+
+enum StockMovementType {
+  IN        // Barang masuk
+  OUT       // Barang keluar
+  ADJUSTMENT // Penyesuaian
+  OPNAME    // Stock opname
+  DAMAGED   // Barang rusak
+  EXPIRED   // Barang kadaluarsa
+  RETURN    // Retur
+}
+
+model StockMovement {
+  id          String            @id @default(cuid())
+  productId   String
+  product     Product           @relation(fields: [productId], references: [id])
+  kopdesId    String
+  kopdes      Kopdes            @relation(fields: [kopdesId], references: [id])
+  type        StockMovementType
+  quantity    Int
+  previousQty Int
+  currentQty  Int
+  reference   String?           // No. referensi (PO, SO, dll)
+  notes       String?
+  createdBy   String?
+  createdAt   DateTime          @default(now())
+
+  @@map("stock_movements")
+}
+
+model StockOpname {
+  id          String   @id @default(cuid())
+  kopdesId    String
+  kopdes      Kopdes   @relation(fields: [kopdesId], references: [id])
+  date        DateTime
+  status      String   @default("DRAFT") // DRAFT, IN_PROGRESS, COMPLETED
+  notes       String?
+  createdBy   String?
+  completedAt DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  items       StockOpnameItem[]
+
+  @@map("stock_opnames")
+}
+
+model StockOpnameItem {
+  id            String     @id @default(cuid())
+  stockOpnameId String
+  stockOpname   StockOpname @relation(fields: [stockOpnameId], references: [id], onDelete: Cascade)
+  productId     String
+  systemQty     Int
+  actualQty     Int
+  difference    Int
+  notes         String?
+
+  @@map("stock_opname_items")
+}
+
+// ==========================================
+// SUPPLIERS & PURCHASES
+// ==========================================
+
+model Supplier {
+  id          String   @id @default(cuid())
+  name        String
+  contactName String?
+  phone       String?
+  email       String?
+  address     String?
+  city        String?
+  isGlobal    Boolean  @default(false) // true = supplier nasional
+  kopdesId    String?
+  kopdes      Kopdes?  @relation(fields: [kopdesId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  purchases   Purchase[]
+
+  @@map("suppliers")
+}
+
+enum PurchaseStatus {
+  DRAFT
+  ORDERED
+  RECEIVED
+  PARTIAL
+  CANCELLED
+  RETURNED
+}
+
+model Purchase {
+  id          String         @id @default(cuid())
+  invoiceNo   String         @unique
+  supplierId  String
+  supplier    Supplier       @relation(fields: [supplierId], references: [id])
+  kopdesId    String
+  kopdes      Kopdes         @relation(fields: [kopdesId], references: [id])
+  status      PurchaseStatus @default(DRAFT)
+  totalAmount Float          @default(0)
+  taxAmount   Float          @default(0)
+  grandTotal  Float          @default(0)
+  notes       String?
+  receivedAt  DateTime?
+  createdBy   String?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  items       PurchaseItem[]
+
+  @@map("purchases")
+}
+
+model PurchaseItem {
+  id          String   @id @default(cuid())
+  purchaseId  String
+  purchase    Purchase @relation(fields: [purchaseId], references: [id], onDelete: Cascade)
+  productId   String
+  product     Product  @relation(fields: [productId], references: [id])
+  quantity    Int
+  receivedQty Int      @default(0)
+  unitPrice   Float
+  totalPrice  Float
+  notes       String?
+
+  @@map("purchase_items")
+}
+
+// ==========================================
+// TRANSACTIONS (POS)
+// ==========================================
+
+enum TransactionStatus {
+  COMPLETED
+  PENDING
+  CANCELLED
+  REFUNDED
+}
+
+enum PaymentMethod {
+  CASH
+  QRIS
+  TRANSFER
+  SPLIT
+}
+
+model Transaction {
+  id              String            @id @default(cuid())
+  invoiceNo       String            @unique
+  kopdesId        String
+  kopdes          Kopdes            @relation(fields: [kopdesId], references: [id])
+  cashierId       String
+  cashier         User              @relation(fields: [cashierId], references: [id])
+  customerId      String?
+  customer        Customer?         @relation(fields: [customerId], references: [id])
+  subtotal        Float             @default(0)
+  discountAmount  Float             @default(0)
+  taxAmount       Float             @default(0)
+  totalAmount     Float             @default(0)
+  paymentMethod   PaymentMethod     @default(CASH)
+  cashReceived    Float?
+  changeAmount    Float?
+  status          TransactionStatus @default(COMPLETED)
+  voucherCode     String?
+  pointsUsed      Int               @default(0)
+  pointsEarned    Int               @default(0)
+  cashbackAmount  Float             @default(0)
+  notes           String?
+  shiftId         String?
+  shift           CashierShift?     @relation(fields: [shiftId], references: [id])
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  items           TransactionItem[]
+  payments        Payment[]
+
+  @@map("transactions")
+}
+
+model TransactionItem {
+  id            String      @id @default(cuid())
+  transactionId String
+  transaction   Transaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+  productId     String
+  product       Product     @relation(fields: [productId], references: [id])
+  productName   String      // Snapshot nama produk saat transaksi
+  quantity      Int
+  unitPrice     Float
+  discount      Float       @default(0)
+  totalPrice    Float
+  createdAt     DateTime    @default(now())
+
+  @@map("transaction_items")
+}
+
+model Payment {
+  id            String        @id @default(cuid())
+  transactionId String
+  transaction   Transaction   @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+  method        PaymentMethod
+  amount        Float
+  reference     String?       // No. referensi pembayaran
+  status        String        @default("SUCCESS") // SUCCESS, PENDING, FAILED
+  createdAt     DateTime      @default(now())
+
+  @@map("payments")
+}
+
+model CashierShift {
+  id            String    @id @default(cuid())
+  userId        String
+  user          User      @relation(fields: [userId], references: [id])
+  kopdesId      String
+  kopdes        Kopdes    @relation(fields: [kopdesId], references: [id])
+  openingCash   Float     @default(0)
+  closingCash   Float?
+  expectedCash  Float?
+  difference    Float?
+  status        String    @default("OPEN") // OPEN, CLOSED
+  openedAt      DateTime  @default(now())
+  closedAt      DateTime?
+  notes         String?
+
+  transactions  Transaction[]
+
+  @@map("cashier_shifts")
+}
+
+// ==========================================
+// ORDERS (ONLINE)
+// ==========================================
+
+enum OrderStatus {
+  WAITING_PAYMENT
+  PROCESSING
+  PACKING
+  READY_PICKUP
+  SHIPPING
+  COMPLETED
+  CANCELLED
+}
+
+enum OrderType {
+  PICKUP    // Ambil di Kopdes
+  DELIVERY  // Pengiriman
+}
+
+model Order {
+  id              String      @id @default(cuid())
+  orderNo         String      @unique
+  userId          String
+  user            User        @relation(fields: [userId], references: [id])
+  kopdesId        String
+  kopdes          Kopdes      @relation(fields: [kopdesId], references: [id])
+  customerId      String?
+  customer        Customer?   @relation(fields: [customerId], references: [id])
+  type            OrderType   @default(PICKUP)
+  status          OrderStatus @default(WAITING_PAYMENT)
+  subtotal        Float       @default(0)
+  discountAmount  Float       @default(0)
+  shippingCost    Float       @default(0)
+  taxAmount       Float       @default(0)
+  totalAmount     Float       @default(0)
+  paymentMethod   PaymentMethod?
+  paymentProof    String?     // Cloudinary URL
+  voucherCode     String?
+  pointsUsed      Int         @default(0)
+  pointsEarned    Int         @default(0)
+  cashbackAmount  Float       @default(0)
+  addressId       String?
+  address         CustomerAddress? @relation(fields: [addressId], references: [id])
+  notes           String?
+  paidAt          DateTime?
+  processedAt     DateTime?
+  completedAt     DateTime?
+  cancelledAt     DateTime?
+  cancelReason    String?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  items           OrderItem[]
+  statusHistory   OrderStatusHistory[]
+
+  @@map("orders")
+}
+
+model OrderItem {
+  id          String   @id @default(cuid())
+  orderId     String
+  order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId   String
+  product     Product  @relation(fields: [productId], references: [id])
+  productName String
+  quantity    Int
+  unitPrice   Float
+  discount    Float    @default(0)
+  totalPrice  Float
+
+  @@map("order_items")
+}
+
+model OrderStatusHistory {
+  id        String      @id @default(cuid())
+  orderId   String
+  order     Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  status    OrderStatus
+  notes     String?
+  createdBy String?
+  createdAt DateTime    @default(now())
+
+  @@map("order_status_history")
+}
+
+// ==========================================
+// CUSTOMERS & LOYALTY
+// ==========================================
+
+enum MemberLevel {
+  SILVER
+  GOLD
+  PLATINUM
+}
+
+model Customer {
+  id            String       @id @default(cuid())
+  userId        String       @unique
+  user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  kopdesId      String?
+  kopdes        Kopdes?      @relation(fields: [kopdesId], references: [id])
+  memberCode    String?      @unique
+  memberLevel   MemberLevel  @default(SILVER)
+  totalPoints   Int          @default(0)
+  totalSpending Float        @default(0)
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  addresses     CustomerAddress[]
+  transactions  Transaction[]
+  orders        Order[]
+  pointTransactions PointTransaction[]
+
+  @@map("customers")
+}
+
+model CustomerAddress {
+  id          String   @id @default(cuid())
+  customerId  String
+  customer    Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  label       String   // Rumah, Kantor, dll
+  recipientName String
+  phone       String
+  address     String
+  province    String
+  city        String
+  district    String
+  postalCode  String?
+  isDefault   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  orders      Order[]
+
+  @@map("customer_addresses")
+}
+
+model PointTransaction {
+  id          String   @id @default(cuid())
+  customerId  String
+  customer    Customer @relation(fields: [customerId], references: [id])
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  type        String   // EARN, REDEEM
+  points      Int
+  description String?
+  reference   String?
+  createdAt   DateTime @default(now())
+
+  @@map("point_transactions")
+}
+
+model Wishlist {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, productId])
+  @@map("wishlists")
+}
+
+// ==========================================
+// FINANCE
+// ==========================================
+
+enum CashFlowType {
+  INCOME
+  EXPENSE
+}
+
+model CashFlow {
+  id          String       @id @default(cuid())
+  kopdesId    String
+  kopdes      Kopdes       @relation(fields: [kopdesId], references: [id])
+  type        CashFlowType
+  category    String       // Penjualan, Pembelian, Operasional, dll
+  amount      Float
+  description String?
+  reference   String?
+  date        DateTime     @default(now())
+  createdBy   String?
+  createdAt   DateTime     @default(now())
+
+  @@map("cash_flows")
+}
+
+model Expense {
+  id          String   @id @default(cuid())
+  kopdesId    String
+  kopdes      Kopdes   @relation(fields: [kopdesId], references: [id])
+  category    String   // Operasional, Gaji, Listrik, dll
+  amount      Float
+  description String?
+  receipt     String?  // Cloudinary URL bukti
+  date        DateTime @default(now())
+  createdBy   String?
+  createdAt   DateTime @default(now())
+
+  @@map("expenses")
+}
+
+enum DepositStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+model DailyDeposit {
+  id          String        @id @default(cuid())
+  kopdesId    String
+  kopdes      Kopdes        @relation(fields: [kopdesId], references: [id])
+  userId      String
+  user        User          @relation(fields: [userId], references: [id])
+  date        DateTime
+  amount      Float
+  transferProof String?     // Cloudinary URL
+  bankAccount String?
+  status      DepositStatus @default(PENDING)
+  notes       String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  verifications DepositVerification[]
+
+  @@map("daily_deposits")
+}
+
+model DepositVerification {
+  id          String       @id @default(cuid())
+  depositId   String
+  deposit     DailyDeposit @relation(fields: [depositId], references: [id], onDelete: Cascade)
+  verifiedBy  String
+  verifier    User         @relation(fields: [verifiedBy], references: [id])
+  status      DepositStatus
+  notes       String?
+  createdAt   DateTime     @default(now())
+
+  @@map("deposit_verifications")
+}
+
+// ==========================================
+// PROMOTIONS
+// ==========================================
+
+model Promotion {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  type        String   // DISCOUNT, CASHBACK, BUNDLING, BUY_GET
+  value       Float    // Percentage or fixed amount
+  isPercentage Boolean @default(true)
+  minPurchase Float?
+  maxDiscount Float?
+  isGlobal    Boolean  @default(false) // true = promo nasional
+  kopdesId    String?
+  kopdes      Kopdes?  @relation(fields: [kopdesId], references: [id])
+  startDate   DateTime
+  endDate     DateTime
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("promotions")
+}
+
+model Voucher {
+  id          String   @id @default(cuid())
+  code        String   @unique
+  name        String
+  description String?
+  type        String   // PERCENTAGE, FIXED
+  value       Float
+  minPurchase Float?
+  maxDiscount Float?
+  maxUsage    Int?
+  usedCount   Int      @default(0)
+  isGlobal    Boolean  @default(false)
+  kopdesId    String?
+  kopdes      Kopdes?  @relation(fields: [kopdesId], references: [id])
+  startDate   DateTime
+  endDate     DateTime
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("vouchers")
+}
+
+model FlashSale {
+  id        String          @id @default(cuid())
+  name      String
+  startDate DateTime
+  endDate   DateTime
+  isActive  Boolean         @default(true)
+  createdAt DateTime        @default(now())
+
+  items     FlashSaleItem[]
+
+  @@map("flash_sales")
+}
+
+model FlashSaleItem {
+  id          String    @id @default(cuid())
+  flashSaleId String
+  flashSale   FlashSale @relation(fields: [flashSaleId], references: [id], onDelete: Cascade)
+  productId   String
+  product     Product   @relation(fields: [productId], references: [id])
+  salePrice   Float
+  maxQty      Int?
+  soldQty     Int       @default(0)
+
+  @@map("flash_sale_items")
+}
+
+model Banner {
+  id        String   @id @default(cuid())
+  title     String
+  image     String   // Cloudinary URL
+  link      String?
+  kopdesId  String?
+  kopdes    Kopdes?  @relation(fields: [kopdesId], references: [id])
+  isGlobal  Boolean  @default(false)
+  sortOrder Int      @default(0)
+  isActive  Boolean  @default(true)
+  startDate DateTime?
+  endDate   DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("banners")
+}
+
+// ==========================================
+// NOTIFICATIONS
+// ==========================================
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  kopdesId  String?
+  kopdes    Kopdes?  @relation(fields: [kopdesId], references: [id])
+  title     String
+  message   String
+  type      String   // ORDER, STOCK, PAYMENT, PROMO, SYSTEM, DEPOSIT
+  data      Json?    // Additional data
+  isRead    Boolean  @default(false)
+  isGlobal  Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@map("notifications")
+}
+
+// ==========================================
+// KOPDES MEMBERS (ANGGOTA KOPERASI)
+// ==========================================
+
+model KopdesMember {
+  id              String   @id @default(cuid())
+  kopdesId        String
+  kopdes          Kopdes   @relation(fields: [kopdesId], references: [id])
+  memberNo        String   @unique
+  name            String
+  nik             String?
+  phone           String?
+  address         String?
+  joinDate        DateTime @default(now())
+  isActive        Boolean  @default(true)
+  simpananPokok   Float    @default(0)
+  simpananWajib   Float    @default(0)
+  simpananSukarela Float   @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  savings         KopdesSaving[]
+  shuRecords      KopdesSHU[]
+
+  @@map("kopdes_members")
+}
+
+model KopdesSaving {
+  id          String       @id @default(cuid())
+  memberId    String
+  member      KopdesMember @relation(fields: [memberId], references: [id])
+  type        String       // POKOK, WAJIB, SUKARELA
+  amount      Float
+  isDeposit   Boolean      @default(true) // true = setor, false = tarik
+  balance     Float
+  notes       String?
+  date        DateTime     @default(now())
+  createdAt   DateTime     @default(now())
+
+  @@map("kopdes_savings")
+}
+
+model KopdesSHU {
+  id          String       @id @default(cuid())
+  memberId    String
+  member      KopdesMember @relation(fields: [memberId], references: [id])
+  year        Int
+  amount      Float
+  status      String       @default("PENDING") // PENDING, DISTRIBUTED
+  distributedAt DateTime?
+  createdAt   DateTime     @default(now())
+
+  @@map("kopdes_shu")
+}
+
+// ==========================================
+// SYSTEM SETTINGS
+// ==========================================
+
+model SystemSetting {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String
+  type      String   @default("STRING") // STRING, NUMBER, BOOLEAN, JSON
+  group     String   @default("GENERAL") // GENERAL, PAYMENT, NOTIFICATION, SECURITY
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("system_settings")
+}
+
+model BankAccount {
+  id        String   @id @default(cuid())
+  bankName  String
+  accountNo String
+  accountName String
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  @@map("bank_accounts")
+}
+
+model ErrorLog {
+  id        String   @id @default(cuid())
+  level     String   // ERROR, WARN, INFO
+  message   String
+  stack     String?
+  endpoint  String?
+  userId    String?
+  ipAddress String?
+  createdAt DateTime @default(now())
+
+  @@map("error_logs")
+}
+
+model BackupHistory {
+  id        String   @id @default(cuid())
+  filename  String
+  size      Float?
+  type      String   // AUTO, MANUAL
+  status    String   // SUCCESS, FAILED
+  notes     String?
+  createdBy String?
+  createdAt DateTime @default(now())
+
+  @@map("backup_history")
+}
