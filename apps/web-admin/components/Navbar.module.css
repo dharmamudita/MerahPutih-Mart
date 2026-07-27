@@ -1,0 +1,149 @@
+.navbarWrapper {
+  width: 100%;
+  padding: 16px 24px;
+  background-color: var(--nav-gradient, #111827);
+  background: var(--nav-gradient);
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  display: flex;
+  justify-content: center;
+}
+
+.navbar {
+  width: 100%;
+  max-width: 1200px;
+  height: 56px;
+  background: var(--nav-bg-glass);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--nav-border);
+  border-radius: 100px; /* Capsule shape */
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 12px 0 24px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.15);
+}
+
+/* --- Logo Section --- */
+.logoSection {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.logoIcon {
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, var(--gold), #FFF8D6);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px;
+}
+
+.logoInner {
+  width: 100%;
+  height: 100%;
+  background-color: var(--primary-900);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--white);
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 0.5px;
+}
+
+.logoText {
+  color: var(--white);
+  font-weight: 700;
+  font-size: 18px;
+  letter-spacing: -0.5px;
+}
+
+.textAccent {
+  color: var(--primary-400);
+}
+
+/* --- Menu Section --- */
+.menuSection {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.menuItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 14px;
+  font-weight: 500;
+  padding: 8px 16px;
+  border-radius: 100px;
+  transition: all 0.3s ease;
+}
+
+.menuItem:hover {
+  color: var(--white);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.menuItem.active {
+  color: var(--white);
+  background: rgba(255, 255, 255, 0.1);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+}
+
+/* --- User Section --- */
+.userSection {
+  display: flex;
+  align-items: center;
+}
+
+.userDropdown {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 6px 12px 6px 6px;
+  border-radius: 100px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.userDropdown:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.avatar {
+  width: 32px;
+  height: 32px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--white);
+  position: relative;
+}
+
+.onlineBadge {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 10px;
+  height: 10px;
+  background-color: var(--success);
+  border: 2px solid var(--primary-900);
+  border-radius: 50%;
+}
+
+.chevron {
+  color: rgba(255, 255, 255, 0.6);
+}
