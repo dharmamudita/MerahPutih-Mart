@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: kopdes_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: kopdes_admin
+      POSTGRES_PASSWORD: kopdes_secret_2024
+      POSTGRES_DB: kopdes_merah_putih
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - kopdes_network
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: kopdes_pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@kopdes.id
+      PGADMIN_DEFAULT_PASSWORD: admin123
+    ports:
+      - "8080:80"
+    depends_on:
+      - postgres
+    networks:
+      - kopdes_network
+
+volumes:
+  postgres_data:
+
+networks:
+  kopdes_network:
+    driver: bridge
