@@ -1,0 +1,130 @@
+.footer {
+  background-color: var(--white);
+  border-top: 1px solid var(--neutral-200);
+  margin-top: 60px;
+}
+
+.footerContent {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1.5fr;
+  gap: 40px;
+  padding: 60px 16px;
+}
+
+.brandSection {
+  padding-right: 20px;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.logoIcon {
+  width: 40px;
+  height: 40px;
+  background-color: var(--primary-600);
+  border-radius: 8px;
+  color: var(--white);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 16px;
+}
+
+.logoText {
+  font-size: 18px;
+  font-weight: 800;
+  line-height: 1.1;
+  color: var(--primary-600);
+}
+
+.logoText span {
+  font-size: 14px;
+  color: var(--neutral-900);
+}
+
+.description {
+  color: var(--neutral-500);
+  line-height: 1.6;
+  margin-bottom: 24px;
+  font-size: 14px;
+}
+
+.socials {
+  display: flex;
+  gap: 16px;
+}
+
+.socialIcon {
+  width: 40px;
+  height: 40px;
+  background-color: var(--neutral-100);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--neutral-600);
+  transition: all 0.2s;
+}
+
+.socialIcon:hover {
+  background-color: var(--primary-600);
+  color: var(--white);
+}
+
+.linkTitle {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--neutral-900);
+  margin-bottom: 20px;
+}
+
+.linkList {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.linkList li a {
+  color: var(--neutral-600);
+  font-size: 14px;
+  transition: color 0.2s;
+}
+
+.linkList li a:hover {
+  color: var(--primary-600);
+}
+
+.contactSection {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.contactItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  color: var(--neutral-600);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.contactIcon {
+  color: var(--primary-600);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.bottomBar {
+  background-color: var(--neutral-100);
+  padding: 20px 0;
+  text-align: center;
+  color: var(--neutral-500);
+  font-size: 14px;
+}
