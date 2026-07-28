@@ -31,7 +31,7 @@ export default function RiwayatClient() {
   const fetchOrders = async (token) => {
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
-      const res = await fetch(`${apiUrl}/orders/my-orders`, {
+      const res = await fetch(`${apiUrl}/orders/history`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
