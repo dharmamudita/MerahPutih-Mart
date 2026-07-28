@@ -16,24 +16,6 @@ export default function Navbar() {
 
   return (
     <div className={styles.navbarWrapper}>
-      {/* Top bar for location and promos */}
-      <div className={styles.topBar}>
-        <div className="container">
-          <div className={styles.topBarContent}>
-            <div className={styles.location}>
-              <MapPin size={14} />
-              <span>Dikirim ke: <strong>KopDes Sindangjaya</strong></span>
-            </div>
-            <div className={styles.promoText}>
-              Gratis ongkir untuk pengiriman ke seluruh desa Merah Putih!
-            </div>
-            <div className={styles.topLinks}>
-              <Link href="/bantuan">Bantuan</Link>
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* Main Navbar */}
       <nav className={styles.mainNav}>
         <div className={`container ${styles.navContent}`}>
@@ -59,15 +41,19 @@ export default function Navbar() {
 
           {/* Actions */}
           <div className={styles.actions}>
+            <div className={styles.locationBadge}>
+              <MapPin size={14} />
+              <span>KopDes Sindangjaya</span>
+            </div>
             <Link href="/cart" className={styles.cartBtn}>
-              <ShoppingCart size={24} />
+              <ShoppingCart size={20} />
               {mounted && totalItems > 0 && (
                 <span className={styles.cartBadge}>{totalItems}</span>
               )}
             </Link>
             <div className={styles.divider}></div>
-            <Link href="/login" className={`btn btn-outline ${styles.loginBtn}`}>Masuk</Link>
-            <Link href="/register" className="btn btn-primary">Daftar</Link>
+            <Link href="/login" className={styles.loginBtn}>Masuk</Link>
+            <Link href="/register" className={styles.registerBtn}>Daftar</Link>
           </div>
         </div>
       </nav>

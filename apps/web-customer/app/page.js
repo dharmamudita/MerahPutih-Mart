@@ -20,27 +20,40 @@ export default async function Home() {
   return (
     <div>
       {/* Hero Banner Section */}
-      <section style={{ backgroundColor: 'var(--primary-600)', color: 'var(--white)', padding: '60px 0' }}>
-        <div className="container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div style={{ maxWidth: '600px' }}>
-            <h1 style={{ fontSize: '42px', fontWeight: '800', marginBottom: '16px', lineHeight: 1.2 }}>
-              Belanja Kebutuhan Harian, <br/>Harga Spesial Warga Desa.
+      <section style={{ 
+        background: 'linear-gradient(135deg, var(--primary-800) 0%, var(--primary-600) 100%)', 
+        color: 'var(--white)', 
+        padding: '80px 0',
+        position: 'relative',
+        overflow: 'hidden'
+      }}>
+        {/* Decorative Circles */}
+        <div style={{ position: 'absolute', top: '-100px', right: '-100px', width: '300px', height: '300px', borderRadius: '50%', background: 'rgba(255,255,255,0.1)', filter: 'blur(40px)' }}></div>
+        <div style={{ position: 'absolute', bottom: '-50px', left: '10%', width: '200px', height: '200px', borderRadius: '50%', background: 'rgba(251, 191, 36, 0.15)', filter: 'blur(30px)' }}></div>
+        
+        <div className="container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'relative', zIndex: 10 }}>
+          <div style={{ maxWidth: '640px' }}>
+            <span style={{ display: 'inline-block', padding: '6px 12px', backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: '999px', fontSize: '14px', fontWeight: '600', marginBottom: '20px', backdropFilter: 'blur(4px)' }}>
+              ✨ Solusi Belanja Pintar Warga Desa
+            </span>
+            <h1 style={{ fontSize: '48px', fontWeight: '800', marginBottom: '20px', lineHeight: 1.15, letterSpacing: '-1px' }}>
+              Belanja Kebutuhan Harian, <br/><span style={{ color: 'var(--gold)' }}>Harga Spesial Warga Desa.</span>
             </h1>
-            <p style={{ fontSize: '18px', opacity: 0.9, marginBottom: '32px' }}>
-              Beli sembako dan kebutuhan pertanian langsung dari Koperasi Desa Merah Putih. Dijamin murah, segar, dan bermanfaat untuk kemajuan desa kita.
+            <p style={{ fontSize: '18px', opacity: 0.9, marginBottom: '40px', lineHeight: 1.6 }}>
+              Beli sembako dan kebutuhan pertanian langsung dari Koperasi Desa Merah Putih. Dijamin lebih murah, segar, dan bermanfaat untuk kemajuan desa kita bersama.
             </p>
             <div style={{ display: 'flex', gap: '16px' }}>
-              <Link href="/belanja" className="btn" style={{ backgroundColor: 'var(--gold)', color: 'var(--neutral-900)' }}>
-                Belanja Sekarang
+              <Link href="/belanja" className="btn" style={{ backgroundColor: 'var(--gold)', color: 'var(--neutral-900)', padding: '14px 28px', fontSize: '16px', borderRadius: '999px', boxShadow: '0 4px 14px rgba(251, 191, 36, 0.4)' }}>
+                Mulai Belanja
               </Link>
-              <Link href="/promo" className="btn" style={{ backgroundColor: 'rgba(255,255,255,0.2)', color: 'var(--white)' }}>
+              <Link href="/promo" className="btn" style={{ backgroundColor: 'rgba(255,255,255,0.15)', color: 'var(--white)', padding: '14px 28px', fontSize: '16px', borderRadius: '999px', backdropFilter: 'blur(4px)', border: '1px solid rgba(255,255,255,0.3)' }}>
                 Lihat Promo
               </Link>
             </div>
           </div>
-          {/* Hero Image Placeholder */}
-          <div style={{ width: '400px', height: '300px', backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(255,255,255,0.2)' }}>
-            <span style={{ fontSize: '64px' }}>🛒</span>
+          {/* Hero Image / Illustration */}
+          <div style={{ width: '440px', height: '340px', backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(255,255,255,0.2)', backdropFilter: 'blur(10px)', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
+            <span style={{ fontSize: '80px', filter: 'drop-shadow(0 10px 8px rgba(0,0,0,0.2))' }}>🛍️🛒</span>
           </div>
         </div>
       </section>
@@ -65,26 +78,33 @@ export default async function Home() {
               const imageUrl = product.images && product.images.length > 0 ? product.images[0].url : null;
               
               return (
-                <div key={product.id} style={{ backgroundColor: 'var(--white)', border: '1px solid var(--neutral-200)', borderRadius: '12px', overflow: 'hidden', transition: 'transform 0.2s, box-shadow 0.2s', cursor: 'pointer' }} onMouseOver={(e) => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = 'var(--shadow-md)'; }} onMouseOut={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}>
-                  <div style={{ height: '180px', backgroundColor: 'var(--neutral-100)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '64px', overflow: 'hidden' }}>
+                <div key={product.id} style={{ backgroundColor: 'var(--white)', border: '1px solid var(--neutral-200)', borderRadius: '16px', overflow: 'hidden', transition: 'all 0.3s ease', cursor: 'pointer', display: 'flex', flexDirection: 'column' }} onMouseOver={(e) => { e.currentTarget.style.transform = 'translateY(-8px)'; e.currentTarget.style.boxShadow = 'var(--shadow-premium)'; e.currentTarget.style.borderColor = 'var(--primary-300)'; }} onMouseOut={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.borderColor = 'var(--neutral-200)'; }}>
+                  <div style={{ height: '200px', backgroundColor: 'var(--neutral-100)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '64px', overflow: 'hidden', position: 'relative' }}>
                     {imageUrl ? (
                       <img src={imageUrl} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     ) : (
                       '🌾' // Fallback image icon
                     )}
+                    {product.stockQuantity < 10 && product.stockQuantity > 0 && (
+                      <div style={{ position: 'absolute', top: '12px', left: '12px', backgroundColor: 'var(--warning)', color: 'white', padding: '4px 10px', borderRadius: '999px', fontSize: '11px', fontWeight: 'bold' }}>
+                        Sisa {product.stockQuantity}!
+                      </div>
+                    )}
                   </div>
-                  <div style={{ padding: '16px' }}>
-                    <span style={{ fontSize: '12px', color: 'var(--primary-600)', fontWeight: '600', marginBottom: '4px', display: 'block' }}>
+                  <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', flex: 1 }}>
+                    <div style={{ fontSize: '12px', color: 'var(--primary-600)', fontWeight: '600', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                       {product.category?.name || 'Lainnya'}
-                    </span>
-                    <h3 style={{ fontSize: '16px', fontWeight: '600', marginBottom: '8px', color: 'var(--neutral-900)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    </div>
+                    <h3 style={{ fontSize: '16px', fontWeight: '700', marginBottom: '8px', color: 'var(--neutral-900)', lineHeight: '1.4', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
                       {product.name}
                     </h3>
-                    <p style={{ fontSize: '18px', fontWeight: '700', color: 'var(--danger)' }}>
-                      Rp {product.sellPrice.toLocaleString('id-ID')}
-                      {product.unit && <span style={{ fontSize: '12px', color: 'var(--neutral-500)', fontWeight: 'normal' }}> /{product.unit.symbol}</span>}
-                    </p>
-                    <AddToCartButton product={product} />
+                    <div style={{ marginTop: 'auto', paddingTop: '16px' }}>
+                      <p style={{ fontSize: '20px', fontWeight: '800', color: 'var(--danger)', marginBottom: '16px' }}>
+                        Rp {product.sellPrice.toLocaleString('id-ID')}
+                        {product.unit && <span style={{ fontSize: '13px', color: 'var(--neutral-500)', fontWeight: '500' }}> /{product.unit.symbol}</span>}
+                      </p>
+                      <AddToCartButton product={product} />
+                    </div>
                   </div>
                 </div>
               );
