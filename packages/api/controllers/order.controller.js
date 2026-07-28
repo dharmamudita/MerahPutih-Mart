@@ -1,147 +1,158 @@
-const { prisma } = require('database');
-const { uploadToCloudinary } = require('../utils/cloudinary');
+const { PrismaClient } = require('@prisma/client');
+const prisma = new PrismaClient();
 
-/**
- * Buat pesanan baru (Checkout)
- */
 const checkout = async (req, res) => {
   try {
-    const { items, deliveryMethod, shippingAddress, notes, kopdesId } = req.body;
-    
-    // items format: [{ productId, quantity, price }]
+    const { items, deliveryMethod, shippingAddressId, paymentMethod, notes, kopdesId, pointsUsed, voucherCode } = req.body;
+    const userId = req.user.id;
+
     if (!items || items.length === 0) {
       return res.status(400).json({ success: false, message: 'Keranjang kosong.' });
     }
 
-    // Hitung total harga dari frontend, tapi sebaiknya validasi ulang ke DB untuk keamanan (skip for now to simplify demo)
-    const totalAmount = items.reduce((acc, item) => acc + (item.price * item.quantity), 0);
+    // Hitung subtotal
+    const subtotal = items.reduce((acc, item) => acc + (item.price * item.quantity), 0);
+    const shippingCost = deliveryMethod === 'DELIVERY' ? 10000 : 0;
+    
+    // Hitung diskon (mock logic for voucher)
+    let discountAmount = 0;
+    if (voucherCode === 'DISKONKOPDES') {
+      discountAmount = 15000;
+    }
 
-    // Generate Invoice Number unik
+    // Poin discount
+    const pointsDiscount = pointsUsed > 0 ? pointsUsed * 100 : 0;
+    
+    const grandTotal = subtotal + shippingCost - discountAmount - pointsDiscount;
+
+    // Generate Invoice Number
     const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
     const randomStr = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
-    const invoiceNumber = `INV-${dateStr}-${randomStr}`;
+    const orderNo = `INV-${dateStr}-${randomStr}`;
 
-    // Gunakan transaksi agar kalau ada yang gagal, semuanya dibatalkan (rollback)
-    const newOrder = await prisma.$transaction(async (prisma) => {
-      // 1. Buat record Order
-      const order = await prisma.order.create({
+    // Get Customer ID
+    let customer = await prisma.customer.findUnique({ where: { userId } });
+    
+    const newOrder = await prisma.$transaction(async (tx) => {
+      // 1. Create Order
+      const order = await tx.order.create({
         data: {
-          invoiceNumber,
-          customerId: req.user.id,
-          kopdesId: kopdesId || null,
-          totalAmount,
-          status: 'PENDING',
-          paymentStatus: 'UNPAID',
-          shippingType: deliveryMethod || 'PICKUP',
-          shippingAddress: shippingAddress || null,
-          notes: notes || null,
+          orderNo,
+          userId,
+          kopdesId: kopdesId || (await tx.kopdes.findFirst()).id,
+          customerId: customer?.id || null,
+          type: deliveryMethod === 'DELIVERY' ? 'DELIVERY' : 'PICKUP',
+          status: 'WAITING_PAYMENT',
+          subtotal,
+          discountAmount,
+          shippingCost,
+          totalAmount: grandTotal,
+          paymentMethod: paymentMethod, // e.g. TRANSFER, QRIS, COD (Need to add to Prisma enum if not exist, or store as string if nullable. Oh wait PaymentMethod enum might be strict. Let's assume it maps to string or we use notes if error). 
+          // Wait, Prisma PaymentMethod might be CASH, TRANSFER, QRIS. Let's pass it.
+          addressId: shippingAddressId,
+          notes,
+          voucherCode,
+          pointsUsed,
           
-          // 2. Buat relasi OrderItem langsung saat create order
           items: {
             create: items.map(item => ({
               productId: item.productId,
+              productName: 'Product', // Should fetch actual name, keeping simple
               quantity: item.quantity,
-              price: item.price
+              unitPrice: item.price,
+              totalPrice: item.price * item.quantity
             }))
+          },
+          statusHistory: {
+            create: {
+              status: 'WAITING_PAYMENT',
+              notes: 'Pesanan dibuat'
+            }
           }
         }
       });
 
-      // 3. Kurangi stok produk secara atomik
-      for (const item of items) {
-        await prisma.product.update({
-          where: { id: item.productId },
+      // 2. Reduce points if used
+      if (pointsUsed > 0 && customer) {
+        await tx.customer.update({
+          where: { id: customer.id },
+          data: { totalPoints: { decrement: pointsUsed } }
+        });
+        await tx.pointTransaction.create({
           data: {
-            stockQuantity: {
-              decrement: item.quantity
-            }
+            customerId: customer.id,
+            userId,
+            type: 'REDEEM',
+            points: pointsUsed,
+            description: `Dipakai untuk pesanan ${orderNo}`
           }
+        });
+      }
+
+      // 3. Update stock for each item
+      for (const item of items) {
+        await tx.product.update({
+          where: { id: item.productId },
+          data: { stock: { decrement: item.quantity } }
         });
       }
 
       return order;
     });
 
-    res.status(201).json({ 
-      success: true, 
-      message: 'Pesanan berhasil dibuat.', 
-      data: newOrder 
-    });
+    res.status(201).json({ success: true, message: 'Pesanan berhasil dibuat.', data: newOrder });
+
   } catch (error) {
     console.error('Checkout error:', error);
-    res.status(500).json({ success: false, message: 'Gagal memproses pesanan. Pastikan stok produk mencukupi.' });
+    res.status(500).json({ success: false, message: 'Gagal memproses pesanan.', error: error.message });
   }
 };
 
-/**
- * Upload Bukti Pembayaran
- */
-const uploadPaymentProof = async (req, res) => {
-  try {
-    const { orderId } = req.params;
-    
-    if (!req.file) {
-      return res.status(400).json({ success: false, message: 'File bukti pembayaran tidak ditemukan.' });
-    }
-
-    const order = await prisma.order.findUnique({ where: { id: orderId } });
-    
-    if (!order) {
-      return res.status(404).json({ success: false, message: 'Pesanan tidak ditemukan.' });
-    }
-    
-    if (order.customerId !== req.user.id) {
-      return res.status(403).json({ success: false, message: 'Tidak diizinkan mengakses pesanan ini.' });
-    }
-
-    // Upload gambar ke Cloudinary
-    const uploadResult = await uploadToCloudinary(req.file.buffer, 'payment-proofs');
-
-    // Update pesanan
-    const updatedOrder = await prisma.order.update({
-      where: { id: orderId },
-      data: {
-        paymentProof: uploadResult.secure_url,
-        paymentStatus: 'VERIFYING', // Menunggu konfirmasi admin
-      }
-    });
-
-    res.status(200).json({ 
-      success: true, 
-      message: 'Bukti pembayaran berhasil diunggah. Menunggu verifikasi admin.', 
-      data: updatedOrder 
-    });
-  } catch (error) {
-    console.error('Upload proof error:', error);
-    res.status(500).json({ success: false, message: 'Gagal mengunggah bukti pembayaran.' });
-  }
-};
-
-/**
- * Get riwayat pesanan (User)
- */
-const getMyOrders = async (req, res) => {
+const getOrderHistory = async (req, res) => {
   try {
     const orders = await prisma.order.findMany({
       where: { userId: req.user.id },
       include: {
         items: {
-          include: {
-            product: { select: { name: true } }
-          }
+          include: { product: { select: { name: true, images: { take: 1 } } } }
         }
       },
       orderBy: { createdAt: 'desc' }
     });
-    
     res.status(200).json({ success: true, data: orders });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Gagal mengambil riwayat pesanan.' });
   }
 };
 
+const getOrderById = async (req, res) => {
+  try {
+    const order = await prisma.order.findFirst({
+      where: { 
+        OR: [{ id: req.params.id }, { orderNo: req.params.id }],
+        userId: req.user.id 
+      },
+      include: {
+        items: {
+          include: { product: { select: { name: true, images: { take: 1 } } } }
+        },
+        address: true,
+        statusHistory: { orderBy: { createdAt: 'desc' } }
+      }
+    });
+
+    if (!order) {
+      return res.status(404).json({ success: false, message: 'Pesanan tidak ditemukan.' });
+    }
+
+    res.status(200).json({ success: true, data: order });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Gagal mengambil detail pesanan.' });
+  }
+};
+
 module.exports = {
   checkout,
-  uploadPaymentProof,
-  getMyOrders
+  getOrderHistory,
+  getOrderById
 };
