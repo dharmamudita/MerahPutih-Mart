@@ -99,13 +99,39 @@ export default function CheckoutPage() {
     
     setIsSubmitting(true);
     try {
-      // Mock API Call
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      const token = localStorage.getItem('token');
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
       
-      clearCart();
-      router.push('/checkout/success?orderId=INV-KOPDES-' + Math.floor(Math.random() * 10000));
+      const payload = {
+        items: items.map(i => ({ productId: i.id, quantity: i.quantity, price: i.sellPrice })),
+        deliveryMethod,
+        shippingAddressId: deliveryMethod === 'DELIVERY' ? selectedAddressId : null,
+        paymentMethod,
+        notes,
+        kopdesId: items[0]?.kopdesId || null,
+        pointsUsed: usePoints ? customer.totalPoints : 0,
+        voucherCode: voucherCode || null
+      };
+
+      const res = await fetch(`${apiUrl}/orders/checkout`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(payload)
+      });
+      
+      const data = await res.json();
+
+      if (res.ok) {
+        clearCart();
+        router.push(`/checkout/success?orderId=${data.data.orderNo}`);
+      } else {
+        toast.error(data.message || 'Gagal melakukan checkout.');
+      }
     } catch (error) {
-      toast.error('Gagal melakukan checkout.');
+      toast.error('Terjadi kesalahan jaringan.');
     } finally {
       setIsSubmitting(false);
     }
