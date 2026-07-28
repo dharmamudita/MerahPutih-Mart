@@ -123,7 +123,7 @@ const uploadPaymentProof = async (req, res) => {
 const getMyOrders = async (req, res) => {
   try {
     const orders = await prisma.order.findMany({
-      where: { customerId: req.user.id },
+      where: { userId: req.user.id },
       include: {
         items: {
           include: {
