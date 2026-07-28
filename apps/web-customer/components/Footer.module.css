@@ -128,3 +128,21 @@
   color: var(--neutral-500);
   font-size: 14px;
 }
+
+/* =========================================
+   RESPONSIVE (MOBILE & TABLET)
+========================================= */
+@media (max-width: 1024px) {
+  .footerContent {
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+  }
+}
+
+@media (max-width: 768px) {
+  .footerContent {
+    grid-template-columns: 1fr;
+    gap: 32px;
+    padding: 40px 16px;
+  }
+}

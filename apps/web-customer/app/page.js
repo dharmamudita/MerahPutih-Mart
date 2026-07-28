@@ -31,8 +31,8 @@ export default async function Home() {
         <div style={{ position: 'absolute', top: '-100px', right: '-100px', width: '300px', height: '300px', borderRadius: '50%', background: 'rgba(255,255,255,0.1)', filter: 'blur(40px)' }}></div>
         <div style={{ position: 'absolute', bottom: '-50px', left: '10%', width: '200px', height: '200px', borderRadius: '50%', background: 'rgba(251, 191, 36, 0.15)', filter: 'blur(30px)' }}></div>
         
-        <div className="container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'relative', zIndex: 10 }}>
-          <div style={{ maxWidth: '640px' }}>
+        <div className="container" style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '40px', position: 'relative', zIndex: 10 }}>
+          <div style={{ flex: '1 1 400px', maxWidth: '640px' }}>
             <span style={{ display: 'inline-block', padding: '6px 12px', backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: '999px', fontSize: '14px', fontWeight: '600', marginBottom: '20px', backdropFilter: 'blur(4px)' }}>
               ✨ Solusi Belanja Pintar Warga Desa
             </span>
@@ -42,7 +42,7 @@ export default async function Home() {
             <p style={{ fontSize: '18px', opacity: 0.9, marginBottom: '40px', lineHeight: 1.6 }}>
               Beli sembako dan kebutuhan pertanian langsung dari Koperasi Desa Merah Putih. Dijamin lebih murah, segar, dan bermanfaat untuk kemajuan desa kita bersama.
             </p>
-            <div style={{ display: 'flex', gap: '16px' }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px' }}>
               <Link href="/belanja" className="btn" style={{ backgroundColor: 'var(--gold)', color: 'var(--neutral-900)', padding: '14px 28px', fontSize: '16px', borderRadius: '999px', boxShadow: '0 4px 14px rgba(251, 191, 36, 0.4)' }}>
                 Mulai Belanja
               </Link>
@@ -52,7 +52,7 @@ export default async function Home() {
             </div>
           </div>
           {/* Hero Image / Illustration */}
-          <div style={{ width: '440px', height: '340px', backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(255,255,255,0.2)', backdropFilter: 'blur(10px)', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
+          <div style={{ flex: '1 1 300px', maxWidth: '440px', width: '100%', height: '340px', backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(255,255,255,0.2)', backdropFilter: 'blur(10px)', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
             <span style={{ fontSize: '80px', filter: 'drop-shadow(0 10px 8px rgba(0,0,0,0.2))' }}>🛍️🛒</span>
           </div>
         </div>
@@ -118,7 +118,7 @@ export default async function Home() {
         <div className="container">
           <h2 style={{ fontSize: '24px', fontWeight: '700', textAlign: 'center', marginBottom: '40px' }}>Mengapa Belanja di MerahPutih Mart?</h2>
           
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '32px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '32px' }}>
             <div style={{ textAlign: 'center' }}>
               <div style={{ width: '64px', height: '64px', backgroundColor: 'var(--primary-100)', color: 'var(--primary-600)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '28px', margin: '0 auto 16px' }}>💰</div>
               <h3 style={{ fontSize: '18px', fontWeight: '600', marginBottom: '8px' }}>Harga Lebih Murah</h3>
