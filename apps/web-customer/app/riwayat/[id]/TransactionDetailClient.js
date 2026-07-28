@@ -10,43 +10,64 @@ export default function TransactionDetailClient({ orderId }) {
 
   useEffect(() => {
     setMounted(true);
-    // Di dunia nyata, ini fetch dari /api/orders/:id
-    // Untuk Fase 3 UI Showcase, kita gunakan Mock Data yang sangat kaya
-    setTimeout(() => {
-      setOrder({
-        id: orderId,
-        invoiceNumber: orderId,
-        status: 'COMPLETED', // WAITING_PAYMENT, PROCESSING, SHIPPING, COMPLETED
-        type: 'DELIVERY',
-        createdAt: '2026-07-28T14:30:00Z',
-        completedAt: '2026-07-28T16:45:00Z',
-        shippingAddress: {
-          label: 'Rumah',
-          name: 'Budi Santoso',
-          phone: '081234567890',
-          fullAddress: 'Jl. Merdeka No. 45, Desa Sindangjaya, Kec. Sindang'
-        },
-        paymentMethod: 'QRIS',
-        subtotal: 125000,
-        shippingCost: 10000,
-        discountAmount: 15000,
-        pointsUsed: 50,
-        pointsDiscount: 5000,
-        grandTotal: 115000,
-        items: [
-          { id: '1', name: 'Beras Premium 5kg', price: 65000, quantity: 1, image: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&q=80&w=200' },
-          { id: '2', name: 'Minyak Goreng 2L', price: 30000, quantity: 2, image: 'https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?auto=format&fit=crop&q=80&w=200' }
-        ],
-        timeline: [
-          { status: 'Pesanan Dibuat', time: '2026-07-28T14:30:00Z', desc: 'Pesanan berhasil dibuat dan menunggu pembayaran', active: true, icon: Clock },
-          { status: 'Pembayaran Berhasil', time: '2026-07-28T14:35:00Z', desc: 'Pembayaran menggunakan QRIS berhasil diverifikasi', active: true, icon: CreditCard },
-          { status: 'Diproses', time: '2026-07-28T14:50:00Z', desc: 'Pesanan sedang disiapkan oleh Koperasi', active: true, icon: Package },
-          { status: 'Dalam Pengiriman', time: '2026-07-28T15:30:00Z', desc: 'Pesanan sedang dibawa oleh kurir', active: true, icon: Truck },
-          { status: 'Selesai', time: '2026-07-28T16:45:00Z', desc: 'Pesanan telah diterima', active: true, icon: CheckCircle2 }
-        ]
-      });
-    }, 500);
+    const token = localStorage.getItem('token');
+    if (token) {
+      fetchOrderDetail(token);
+    }
   }, [orderId]);
+
+  const fetchOrderDetail = async (token) => {
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+      const res = await fetch(`${apiUrl}/orders/${orderId}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (res.ok) {
+        const o = data.data;
+        setOrder({
+          id: o.id,
+          invoiceNumber: o.orderNo,
+          status: o.status,
+          type: o.type,
+          createdAt: o.createdAt,
+          completedAt: o.completedAt,
+          shippingAddress: o.address ? {
+            label: o.address.label,
+            name: o.address.recipientName,
+            phone: o.address.phone,
+            fullAddress: `${o.address.address}, ${o.address.village}, ${o.address.district}`
+          } : { label: 'Diambil Sendiri', name: '-', phone: '-', fullAddress: '-' },
+          paymentMethod: o.paymentMethod || 'TRANSFER',
+          subtotal: o.subtotal,
+          shippingCost: o.shippingCost,
+          discountAmount: o.discountAmount,
+          pointsUsed: o.pointsUsed,
+          pointsDiscount: o.pointsUsed * 100, // mock conversion
+          grandTotal: o.totalAmount,
+          items: o.items.map(i => ({
+            id: i.id,
+            name: i.product?.name || i.productName,
+            price: i.unitPrice,
+            quantity: i.quantity,
+            image: i.product?.images?.[0]?.url || ''
+          })),
+          timeline: [
+            { status: 'Pesanan Dibuat', time: o.createdAt, desc: 'Pesanan berhasil dibuat', active: true, icon: Clock },
+            ...(o.statusHistory || []).map(h => ({
+              status: h.status,
+              time: h.createdAt,
+              desc: h.notes || 'Status diperbarui',
+              active: true,
+              icon: Package
+            }))
+          ]
+        });
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   if (!mounted || !order) {
     return <div style={{ padding: '60px', textAlign: 'center' }}>Memuat detail pesanan...</div>;
