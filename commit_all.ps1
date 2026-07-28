@@ -3,7 +3,7 @@ foreach ($file in $files) {
     if (-not [string]::IsNullOrWhiteSpace($file)) {
         git add "$file"
         $basename = Split-Path -Path $file -Leaf
-        git commit -m "feat: update $basename"
+        git commit -m "feat: integrate API for $basename"
     }
 }
 git push origin main
