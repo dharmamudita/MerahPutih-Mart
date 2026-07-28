@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { Search, Filter } from 'lucide-react';
 import AddToCartButton from '../../components/AddToCartButton';
+import WishlistButton from '../../components/WishlistButton';
 
 async function getProducts() {
   try {
@@ -94,13 +95,14 @@ export default async function BelanjaPage() {
               const imageUrl = product.images && product.images.length > 0 ? product.images[0].url : null;
               
               return (
-                <div key={product.id} style={{ backgroundColor: 'var(--white)', border: '1px solid var(--neutral-200)', borderRadius: '12px', overflow: 'hidden', transition: 'transform 0.2s, box-shadow 0.2s', cursor: 'pointer' }} onMouseOver={(e) => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = 'var(--shadow-md)'; }} onMouseOut={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}>
-                  <div style={{ height: '180px', backgroundColor: 'var(--neutral-100)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '64px', overflow: 'hidden' }}>
+                <div key={product.id} className="product-card-cart" style={{ backgroundColor: 'var(--white)', border: '1px solid var(--neutral-200)', borderRadius: '12px', overflow: 'hidden', cursor: 'pointer' }}>
+                  <div style={{ height: '180px', backgroundColor: 'var(--neutral-100)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '64px', overflow: 'hidden', position: 'relative' }}>
                     {imageUrl ? (
                       <img src={imageUrl} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     ) : (
-                      '🌾'
+                      <div style={{ opacity: 0.5 }}>🌾</div>
                     )}
+                    <WishlistButton productId={product.id} />
                   </div>
                   <div style={{ padding: '16px' }}>
                     <span style={{ fontSize: '12px', color: 'var(--primary-600)', fontWeight: '600', marginBottom: '4px', display: 'block' }}>
