@@ -1,0 +1,140 @@
+.container {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 40px 20px;
+}
+
+.title {
+  font-size: 32px;
+  font-weight: 800;
+  color: var(--neutral-900);
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.emptyState {
+  background: var(--white);
+  border-radius: 24px;
+  padding: 60px 40px;
+  text-align: center;
+  border: 1px dashed var(--neutral-300);
+  margin-top: 40px;
+}
+
+.emptyStateIcon {
+  font-size: 64px;
+  opacity: 0.5;
+  margin-bottom: 16px;
+  display: block;
+}
+
+.emptyState h3 {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--neutral-800);
+  margin-bottom: 8px;
+}
+
+.emptyState p {
+  color: var(--neutral-500);
+  margin-bottom: 24px;
+}
+
+.orderList {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.orderCard {
+  background: var(--white);
+  border-radius: 20px;
+  padding: 24px;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--neutral-200);
+  transition: all 0.2s ease;
+}
+
+.orderCard:hover {
+  box-shadow: var(--shadow-md);
+  border-color: var(--primary-200);
+}
+
+.orderHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--neutral-100);
+}
+
+.orderNo {
+  font-weight: 700;
+  color: var(--neutral-900);
+  font-size: 16px;
+  margin-bottom: 4px;
+}
+
+.orderDate {
+  font-size: 13px;
+  color: var(--neutral-500);
+}
+
+.statusBadge {
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.statusWAITING_PAYMENT { background: #fef3c7; color: #d97706; }
+.statusVERIFYING { background: #e0e7ff; color: #4f46e5; }
+.statusPROCESSED { background: #dbeafe; color: #2563eb; }
+.statusSHIPPING { background: #fce7f3; color: #db2777; }
+.statusREADY_FOR_PICKUP { background: #fef08a; color: #a16207; }
+.statusCOMPLETED { background: #d1fae5; color: #059669; }
+.statusCANCELLED { background: #fee2e2; color: #dc2626; }
+
+.orderBody {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.orderItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 14px;
+  color: var(--neutral-700);
+}
+
+.itemName {
+  font-weight: 500;
+}
+
+.itemQty {
+  color: var(--neutral-500);
+}
+
+.orderFooter {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 16px;
+  border-top: 1px dashed var(--neutral-200);
+}
+
+.totalLabel {
+  font-size: 14px;
+  color: var(--neutral-500);
+  font-weight: 600;
+}
+
+.totalAmount {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--primary-600);
+}
