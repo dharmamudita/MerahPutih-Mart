@@ -145,8 +145,93 @@ const getMe = async (req, res) => {
     });
   } catch (error) {
     console.error('Error in getMe:', error);
-    res.status(500).json({ success: false, message: 'Terjadi kesalahan pada server.' });
+    res.status(500).json({ success: false, message: 'Gagal mengambil data user.', error: error.message });
   }
 };
 
-module.exports = { register, login, getMe };
+/**
+ * Memperbarui profil pengguna (Nama, Email, dll)
+ */
+const updateProfile = async (req, res) => {
+  try {
+    const { name, phone } = req.body;
+    
+    // Perbarui tabel User
+    const updatedUser = await prisma.user.update({
+      where: { id: req.user.id },
+      data: { name }
+    });
+    
+    // Perbarui tabel Customer jika ada
+    let updatedCustomer = null;
+    const existingCustomer = await prisma.customer.findUnique({
+      where: { userId: req.user.id }
+    });
+    
+    if (existingCustomer) {
+      updatedCustomer = await prisma.customer.update({
+        where: { userId: req.user.id },
+        data: { phone }
+      });
+    }
+
+    res.status(200).json({ 
+      success: true, 
+      message: 'Profil berhasil diperbarui.',
+      data: {
+        id: updatedUser.id,
+        name: updatedUser.name,
+        email: updatedUser.email,
+        phone: updatedCustomer ? updatedCustomer.phone : null
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Gagal memperbarui profil.', error: error.message });
+  }
+};
+
+/**
+ * Mengubah password pengguna
+ */
+const changePassword = async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    
+    // Ambil data user
+    const user = await prisma.user.findUnique({
+      where: { id: req.user.id }
+    });
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'Pengguna tidak ditemukan.' });
+    }
+
+    // Cek password saat ini
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ success: false, message: 'Password saat ini salah.' });
+    }
+
+    // Hash password baru
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+    // Update password
+    await prisma.user.update({
+      where: { id: req.user.id },
+      data: { password: hashedPassword }
+    });
+
+    res.status(200).json({ success: true, message: 'Password berhasil diubah.' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Gagal mengubah password.', error: error.message });
+  }
+};
+
+module.exports = {
+  register,
+  login,
+  getMe,
+  updateProfile,
+  changePassword
+};
