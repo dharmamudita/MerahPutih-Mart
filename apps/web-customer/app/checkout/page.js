@@ -2,7 +2,8 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import useCartStore from '../../store/cartStore';
-import { MapPin, Truck, Store, CreditCard, UploadCloud } from 'lucide-react';
+import { MapPin, Truck, Store, CreditCard, UploadCloud, Ticket, Wallet, Plus, Coins, Info } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -10,37 +11,107 @@ export default function CheckoutPage() {
   const { items, getTotalPrice, clearCart } = useCartStore();
   
   const [deliveryMethod, setDeliveryMethod] = useState('DELIVERY'); // 'DELIVERY' atau 'PICKUP'
-  const [address, setAddress] = useState('');
+  const [paymentMethod, setPaymentMethod] = useState('TRANSFER'); // TRANSFER, QRIS, COD
+  const [addresses, setAddresses] = useState([]);
+  const [selectedAddressId, setSelectedAddressId] = useState('');
+  
+  const [user, setUser] = useState(null);
+  const [customer, setCustomer] = useState(null);
+  
+  const [usePoints, setUsePoints] = useState(false);
+  const [voucherCode, setVoucherCode] = useState('');
+  const [discountAmount, setDiscountAmount] = useState(0);
+  const [notes, setNotes] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const subtotal = getTotalPrice();
+  const shippingCost = deliveryMethod === 'DELIVERY' ? 10000 : 0;
+  const pointDiscount = usePoints && customer ? Math.min(customer.totalPoints * 100, subtotal) : 0;
+  const grandTotal = subtotal + shippingCost - discountAmount - pointDiscount;
 
   useEffect(() => {
     setMounted(true);
-    // Redirect ke cart jika keranjang kosong
     if (items.length === 0 && mounted) {
       router.push('/cart');
+      return;
+    }
+
+    const storedUser = localStorage.getItem('user');
+    const storedToken = localStorage.getItem('token');
+    
+    if (storedUser && storedToken) {
+      setUser(JSON.parse(storedUser));
+      fetchAddresses(storedToken);
+      fetchCustomerProfile(storedToken);
+    } else {
+      router.push('/login');
     }
   }, [items.length, router, mounted]);
 
+  const fetchAddresses = async (token) => {
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+      const res = await fetch(`${apiUrl}/addresses`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setAddresses(data.data);
+        const defaultAddr = data.data.find(a => a.isDefault);
+        if (defaultAddr) setSelectedAddressId(defaultAddr.id);
+        else if (data.data.length > 0) setSelectedAddressId(data.data[0].id);
+      }
+    } catch (error) {
+      console.error('Failed to fetch addresses', error);
+    }
+  };
+
+  const fetchCustomerProfile = async (token) => {
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+      // Asumsikan ada endpoint ini dari member backend (akan kita buat di step 2)
+      // Untuk mock up sekarang:
+      setCustomer({
+        totalPoints: 150,
+        memberLevel: 'SILVER'
+      });
+    } catch (error) {
+      console.error('Failed to fetch customer', error);
+    }
+  };
+
+  const applyVoucher = () => {
+    if (voucherCode.toUpperCase() === 'DISKONKOPDES') {
+      setDiscountAmount(15000);
+      toast.success('Voucher berhasil digunakan!');
+    } else {
+      toast.error('Voucher tidak valid');
+      setDiscountAmount(0);
+    }
+  };
+
   const handleCheckout = async (e) => {
     e.preventDefault();
-    setIsSubmitting(true);
+    if (deliveryMethod === 'DELIVERY' && !selectedAddressId) {
+      toast.error('Silakan pilih alamat pengiriman');
+      return;
+    }
     
+    setIsSubmitting(true);
     try {
-      // Di sini nanti kita panggil API POST /api/orders/checkout
-      // Simulasi API Call:
+      // Mock API Call
       await new Promise(resolve => setTimeout(resolve, 1500));
       
       clearCart();
-      router.push('/checkout/success?orderId=INV-KOPDES-001');
+      router.push('/checkout/success?orderId=INV-KOPDES-' + Math.floor(Math.random() * 10000));
     } catch (error) {
-      console.error(error);
-      alert('Gagal melakukan checkout.');
+      toast.error('Gagal melakukan checkout.');
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  if (!mounted) return null;
+  if (!mounted || !user) return null;
 
   return (
     <div style={{ backgroundColor: 'var(--neutral-50)', minHeight: '100vh', padding: '40px 0' }}>
@@ -52,10 +123,10 @@ export default function CheckoutPage() {
           
           <form id="checkout-form" onSubmit={handleCheckout}>
             
-            {/* Metode Pengiriman */}
+            {/* Opsi Pengiriman */}
             <div style={{ backgroundColor: 'white', borderRadius: '16px', border: '1px solid var(--neutral-200)', padding: '24px', marginBottom: '24px' }}>
               <h2 style={{ fontSize: '18px', fontWeight: '700', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Truck size={20} color="var(--primary-600)" /> Metode Pengiriman
+                <Truck size={20} color="var(--primary-600)" /> Opsi Pengiriman
               </h2>
               
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '24px' }}>
@@ -64,17 +135,10 @@ export default function CheckoutPage() {
                   borderRadius: '12px', padding: '16px', cursor: 'pointer', display: 'flex', alignItems: 'flex-start', gap: '12px',
                   backgroundColor: deliveryMethod === 'DELIVERY' ? 'var(--primary-50)' : 'white'
                 }}>
-                  <input 
-                    type="radio" 
-                    name="deliveryMethod" 
-                    value="DELIVERY" 
-                    checked={deliveryMethod === 'DELIVERY'}
-                    onChange={() => setDeliveryMethod('DELIVERY')}
-                    style={{ marginTop: '4px' }}
-                  />
+                  <input type="radio" value="DELIVERY" checked={deliveryMethod === 'DELIVERY'} onChange={() => setDeliveryMethod('DELIVERY')} style={{ marginTop: '4px' }} />
                   <div>
-                    <div style={{ fontWeight: '700', marginBottom: '4px' }}>Diantar ke Rumah</div>
-                    <div style={{ fontSize: '12px', color: 'var(--neutral-600)' }}>Gratis ongkir oleh kurir desa.</div>
+                    <div style={{ fontWeight: '700', marginBottom: '4px' }}>Kirim ke Rumah</div>
+                    <div style={{ fontSize: '12px', color: 'var(--neutral-600)' }}>Kurir Kopdes (Rp 10.000)</div>
                   </div>
                 </label>
                 
@@ -83,120 +147,186 @@ export default function CheckoutPage() {
                   borderRadius: '12px', padding: '16px', cursor: 'pointer', display: 'flex', alignItems: 'flex-start', gap: '12px',
                   backgroundColor: deliveryMethod === 'PICKUP' ? 'var(--primary-50)' : 'white'
                 }}>
-                  <input 
-                    type="radio" 
-                    name="deliveryMethod" 
-                    value="PICKUP" 
-                    checked={deliveryMethod === 'PICKUP'}
-                    onChange={() => setDeliveryMethod('PICKUP')}
-                    style={{ marginTop: '4px' }}
-                  />
+                  <input type="radio" value="PICKUP" checked={deliveryMethod === 'PICKUP'} onChange={() => setDeliveryMethod('PICKUP')} style={{ marginTop: '4px' }} />
                   <div>
                     <div style={{ fontWeight: '700', marginBottom: '4px' }}>Ambil di Koperasi</div>
-                    <div style={{ fontSize: '12px', color: 'var(--neutral-600)' }}>Ambil sendiri di KopDes Merah Putih.</div>
+                    <div style={{ fontSize: '12px', color: 'var(--neutral-600)' }}>Gratis biaya penanganan</div>
                   </div>
                 </label>
               </div>
-
+              
               {deliveryMethod === 'DELIVERY' && (
-                <div>
-                  <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', marginBottom: '8px', color: 'var(--neutral-700)' }}>
-                    Alamat Lengkap Pengiriman
-                  </label>
-                  <textarea 
-                    required
-                    value={address}
-                    onChange={(e) => setAddress(e.target.value)}
-                    placeholder="Contoh: Jl. Mawar No. 12, RT 03/RW 01, Desa Sindangjaya. Dekat pos ronda."
-                    style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid var(--neutral-300)', minHeight: '100px', fontFamily: 'inherit' }}
-                  ></textarea>
+                <div style={{ marginTop: '16px', padding: '16px', backgroundColor: 'var(--neutral-50)', borderRadius: '12px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                    <h3 style={{ fontSize: '14px', fontWeight: '600' }}>Alamat Pengiriman</h3>
+                    <button type="button" onClick={() => router.push('/profile')} style={{ color: 'var(--primary-600)', fontSize: '13px', fontWeight: '600', background: 'none', border: 'none', cursor: 'pointer' }}>+ Tambah Alamat</button>
+                  </div>
+                  
+                  {addresses.length === 0 ? (
+                    <div style={{ padding: '20px', textAlign: 'center', backgroundColor: 'white', borderRadius: '8px', border: '1px dashed var(--neutral-300)' }}>
+                      Anda belum memiliki alamat tersimpan.
+                    </div>
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                      {addresses.map(addr => (
+                        <label key={addr.id} style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', padding: '12px', border: '1px solid var(--neutral-200)', borderRadius: '8px', backgroundColor: 'white', cursor: 'pointer' }}>
+                          <input type="radio" name="address" checked={selectedAddressId === addr.id} onChange={() => setSelectedAddressId(addr.id)} style={{ marginTop: '4px' }} />
+                          <div>
+                            <div style={{ fontWeight: '600', fontSize: '14px' }}>{addr.label} <span style={{ fontWeight: 'normal', color: 'var(--neutral-500)' }}>({addr.recipientName})</span></div>
+                            <div style={{ fontSize: '13px', color: 'var(--neutral-600)', marginTop: '4px' }}>{addr.address}, {addr.village}, {addr.district}, {addr.city}</div>
+                            <div style={{ fontSize: '12px', color: 'var(--neutral-500)', marginTop: '4px' }}>{addr.phone}</div>
+                          </div>
+                        </label>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+              
+              {deliveryMethod === 'PICKUP' && (
+                <div style={{ marginTop: '16px', padding: '16px', backgroundColor: 'var(--primary-50)', borderRadius: '12px', display: 'flex', gap: '12px' }}>
+                  <Store color="var(--primary-600)" />
+                  <div>
+                    <h4 style={{ fontWeight: '700', fontSize: '14px', color: 'var(--neutral-900)' }}>Koperasi Desa Merah Putih</h4>
+                    <p style={{ fontSize: '13px', color: 'var(--neutral-600)', marginTop: '4px' }}>Jl. Raya Desa No. 123, Sindangjaya. Buka 08:00 - 17:00</p>
+                  </div>
                 </div>
               )}
             </div>
-
-            {/* Metode Pembayaran */}
-            <div style={{ backgroundColor: 'white', borderRadius: '16px', border: '1px solid var(--neutral-200)', padding: '24px' }}>
+            
+            {/* Opsi Pembayaran */}
+            <div style={{ backgroundColor: 'white', borderRadius: '16px', border: '1px solid var(--neutral-200)', padding: '24px', marginBottom: '24px' }}>
               <h2 style={{ fontSize: '18px', fontWeight: '700', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <CreditCard size={20} color="var(--primary-600)" /> Metode Pembayaran
+                <Wallet size={20} color="var(--primary-600)" /> Metode Pembayaran
               </h2>
               
-              <div style={{ backgroundColor: 'var(--neutral-50)', padding: '16px', borderRadius: '8px', border: '1px solid var(--neutral-200)', marginBottom: '16px' }}>
-                <div style={{ fontWeight: '700', marginBottom: '8px' }}>Transfer Bank Manual</div>
-                <div style={{ fontSize: '14px', color: 'var(--neutral-600)' }}>
-                  Silakan transfer ke rekening berikut:<br/>
-                  <strong>Bank BRI: 1234-5678-9012-345</strong> a.n Koperasi Merah Putih
-                </div>
-              </div>
-              
-              <div>
-                <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', marginBottom: '8px', color: 'var(--neutral-700)' }}>
-                  Upload Bukti Transfer
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '16px', border: `1px solid ${paymentMethod === 'TRANSFER' ? 'var(--primary-600)' : 'var(--neutral-200)'}`, borderRadius: '12px', cursor: 'pointer', backgroundColor: paymentMethod === 'TRANSFER' ? 'var(--primary-50)' : 'white' }}>
+                  <input type="radio" value="TRANSFER" checked={paymentMethod === 'TRANSFER'} onChange={() => setPaymentMethod('TRANSFER')} />
+                  <CreditCard size={18} color="var(--neutral-700)" />
+                  <span style={{ fontWeight: '600', fontSize: '14px' }}>Transfer Bank (BCA, Mandiri, BRI)</span>
                 </label>
-                <div style={{ border: '2px dashed var(--neutral-300)', padding: '32px', textAlign: 'center', borderRadius: '12px', backgroundColor: 'var(--neutral-50)' }}>
-                  <UploadCloud size={32} color="var(--neutral-400)" style={{ margin: '0 auto 12px' }} />
-                  <div style={{ fontSize: '14px', fontWeight: '600', color: 'var(--primary-600)' }}>Klik untuk unggah foto</div>
-                  <div style={{ fontSize: '12px', color: 'var(--neutral-500)', marginTop: '4px' }}>Format JPG atau PNG (Maks 2MB)</div>
-                  <input type="file" required style={{ display: 'none' }} id="upload-bukti" accept="image/*" />
-                  <label htmlFor="upload-bukti" style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, cursor: 'pointer' }}></label>
-                </div>
+                
+                <label style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '16px', border: `1px solid ${paymentMethod === 'QRIS' ? 'var(--primary-600)' : 'var(--neutral-200)'}`, borderRadius: '12px', cursor: 'pointer', backgroundColor: paymentMethod === 'QRIS' ? 'var(--primary-50)' : 'white' }}>
+                  <input type="radio" value="QRIS" checked={paymentMethod === 'QRIS'} onChange={() => setPaymentMethod('QRIS')} />
+                  <div style={{ fontWeight: '800', fontStyle: 'italic', color: '#1B4D89', fontSize: '14px' }}>QRIS</div>
+                  <span style={{ fontWeight: '600', fontSize: '14px' }}>Scan QRIS (Gopay, OVO, Dana, LinkAja)</span>
+                </label>
+                
+                <label style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '16px', border: `1px solid ${paymentMethod === 'COD' ? 'var(--primary-600)' : 'var(--neutral-200)'}`, borderRadius: '12px', cursor: 'pointer', backgroundColor: paymentMethod === 'COD' ? 'var(--primary-50)' : 'white' }}>
+                  <input type="radio" value="COD" checked={paymentMethod === 'COD'} onChange={() => setPaymentMethod('COD')} />
+                  <Wallet size={18} color="var(--neutral-700)" />
+                  <span style={{ fontWeight: '600', fontSize: '14px' }}>Bayar di Tempat (COD)</span>
+                </label>
               </div>
             </div>
-
+            
+            {/* Catatan Pesanan */}
+            <div style={{ backgroundColor: 'white', borderRadius: '16px', border: '1px solid var(--neutral-200)', padding: '24px', marginBottom: '24px' }}>
+              <h2 style={{ fontSize: '18px', fontWeight: '700', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Info size={20} color="var(--primary-600)" /> Catatan Pesanan
+              </h2>
+              <textarea 
+                className="form-control" 
+                rows="3" 
+                placeholder="Titip pesan ke kasir atau kurir (opsional)..."
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                style={{ resize: 'vertical' }}
+              ></textarea>
+            </div>
           </form>
         </div>
-
-        {/* Kolom Kanan: Ringkasan Order */}
+        
+        {/* Kolom Kanan: Ringkasan & Total */}
         <div>
-          <div style={{ backgroundColor: 'white', borderRadius: '16px', border: '1px solid var(--neutral-200)', padding: '24px', position: 'sticky', top: '40px' }}>
-            <h2 style={{ fontSize: '18px', fontWeight: '700', marginBottom: '24px', color: 'var(--neutral-900)' }}>Ringkasan Pesanan</h2>
+          <div style={{ backgroundColor: 'white', borderRadius: '16px', border: '1px solid var(--neutral-200)', padding: '24px', position: 'sticky', top: '24px' }}>
+            <h2 style={{ fontSize: '18px', fontWeight: '700', marginBottom: '20px' }}>Ringkasan Pesanan</h2>
             
-            <div style={{ maxHeight: '300px', overflowY: 'auto', marginBottom: '24px', paddingRight: '8px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '24px', maxHeight: '300px', overflowY: 'auto' }}>
               {items.map(item => (
-                <div key={item.id} style={{ display: 'flex', gap: '12px', marginBottom: '16px' }}>
-                  <div style={{ width: '60px', height: '60px', backgroundColor: 'var(--neutral-100)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
+                <div key={item.id} style={{ display: 'flex', gap: '12px' }}>
+                  <div style={{ width: '60px', height: '60px', backgroundColor: 'var(--neutral-100)', borderRadius: '8px', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     {item.images && item.images.length > 0 ? (
                       <img src={item.images[0].url} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                    ) : '📦'}
+                    ) : '🌾'}
                   </div>
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: '14px', fontWeight: '600', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '180px' }}>{item.name}</div>
-                    <div style={{ fontSize: '12px', color: 'var(--neutral-500)' }}>{item.quantity} x Rp {item.sellPrice.toLocaleString('id-ID')}</div>
-                  </div>
-                  <div style={{ fontSize: '14px', fontWeight: '700', alignSelf: 'center' }}>
-                    Rp {(item.quantity * item.sellPrice).toLocaleString('id-ID')}
+                    <h3 style={{ fontSize: '14px', fontWeight: '600', color: 'var(--neutral-900)', marginBottom: '4px' }}>{item.name}</h3>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontSize: '12px', color: 'var(--neutral-500)' }}>{item.quantity} x Rp {item.sellPrice.toLocaleString('id-ID')}</span>
+                      <span style={{ fontSize: '14px', fontWeight: '700' }}>Rp {(item.quantity * item.sellPrice).toLocaleString('id-ID')}</span>
+                    </div>
                   </div>
                 </div>
               ))}
             </div>
             
-            <div style={{ height: '1px', backgroundColor: 'var(--neutral-200)', margin: '0 -24px 24px -24px' }}></div>
-            
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px', color: 'var(--neutral-600)', fontSize: '14px' }}>
-              <span>Total Harga ({items.length} Barang)</span>
-              <span>Rp {getTotalPrice().toLocaleString('id-ID')}</span>
+            {/* Poin & Voucher */}
+            <div style={{ borderTop: '1px solid var(--neutral-100)', borderBottom: '1px solid var(--neutral-100)', padding: '16px 0', marginBottom: '20px' }}>
+              {/* Voucher */}
+              <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+                <div style={{ position: 'relative', flex: 1 }}>
+                  <Ticket size={16} color="var(--neutral-400)" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }} />
+                  <input type="text" placeholder="Kode Voucher" value={voucherCode} onChange={e => setVoucherCode(e.target.value)} style={{ width: '100%', padding: '10px 12px 10px 36px', border: '1px solid var(--neutral-200)', borderRadius: '8px', fontSize: '13px' }} />
+                </div>
+                <button type="button" onClick={applyVoucher} style={{ background: 'var(--neutral-900)', color: 'white', border: 'none', padding: '0 16px', borderRadius: '8px', fontWeight: '600', fontSize: '13px', cursor: 'pointer' }}>Gunakan</button>
+              </div>
+              
+              {/* Poin */}
+              {customer && customer.totalPoints > 0 && (
+                <label style={{ display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer', backgroundColor: 'var(--warning-50)', padding: '12px', borderRadius: '8px', border: '1px solid #fef08a' }}>
+                  <input type="checkbox" checked={usePoints} onChange={e => setUsePoints(e.target.checked)} />
+                  <div style={{ flex: 1 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontWeight: '600', fontSize: '13px', color: '#854d0e' }}>
+                      <Coins size={14} /> Gunakan {customer.totalPoints} Poin
+                    </div>
+                    <div style={{ fontSize: '11px', color: '#a16207' }}>Potongan Rp {(customer.totalPoints * 100).toLocaleString('id-ID')}</div>
+                  </div>
+                </label>
+              )}
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '24px', color: 'var(--neutral-600)', fontSize: '14px' }}>
-              <span>Ongkos Kirim</span>
-              <span style={{ color: '#166534' }}>Gratis</span>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '24px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--neutral-600)', fontSize: '14px' }}>
+                <span>Subtotal Produk</span>
+                <span>Rp {subtotal.toLocaleString('id-ID')}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--neutral-600)', fontSize: '14px' }}>
+                <span>Ongkos Kirim</span>
+                <span>Rp {shippingCost.toLocaleString('id-ID')}</span>
+              </div>
+              {discountAmount > 0 && (
+                <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--success)', fontSize: '14px', fontWeight: '600' }}>
+                  <span>Diskon Voucher</span>
+                  <span>- Rp {discountAmount.toLocaleString('id-ID')}</span>
+                </div>
+              )}
+              {pointDiscount > 0 && (
+                <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--warning)', fontSize: '14px', fontWeight: '600' }}>
+                  <span>Tukar Poin</span>
+                  <span>- Rp {pointDiscount.toLocaleString('id-ID')}</span>
+                </div>
+              )}
             </div>
             
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '32px', fontWeight: '800', fontSize: '20px', color: 'var(--neutral-900)' }}>
-              <span>Total Tagihan</span>
-              <span>Rp {getTotalPrice().toLocaleString('id-ID')}</span>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '16px', borderTop: '1px solid var(--neutral-200)', marginBottom: '24px' }}>
+              <span style={{ fontSize: '16px', fontWeight: '600', color: 'var(--neutral-900)' }}>Total Pembayaran</span>
+              <span style={{ fontSize: '24px', fontWeight: '800', color: 'var(--danger)' }}>Rp {grandTotal.toLocaleString('id-ID')}</span>
             </div>
             
             <button 
               type="submit" 
               form="checkout-form"
-              disabled={isSubmitting}
               className="btn btn-primary" 
-              style={{ width: '100%', padding: '16px', fontSize: '16px', opacity: isSubmitting ? 0.7 : 1 }}
+              style={{ width: '100%', padding: '16px', fontSize: '16px' }}
+              disabled={isSubmitting}
             >
-              {isSubmitting ? 'Memproses Pesanan...' : 'Buat Pesanan Sekarang'}
+              {isSubmitting ? 'Memproses Pesanan...' : `Bayar Rp ${grandTotal.toLocaleString('id-ID')}`}
             </button>
           </div>
         </div>
-
+        
       </div>
     </div>
   );
