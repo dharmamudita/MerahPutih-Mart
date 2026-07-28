@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import AddToCartButton from '../../../components/AddToCartButton';
+import WishlistButton from '../../../components/WishlistButton';
 
 // Mapping kategori slug ke nama kategori untuk UI
 const categoryNames = {
@@ -64,14 +65,14 @@ export default async function CategoryPage({ params }) {
               const imageUrl = product.images && product.images.length > 0 ? product.images[0].url : null;
               
               return (
-                <div key={product.id} style={{ backgroundColor: 'var(--white)', border: '1px solid var(--neutral-200)', borderRadius: '16px', overflow: 'hidden', transition: 'all 0.3s ease', cursor: 'pointer', display: 'flex', flexDirection: 'column' }} onMouseOver={(e) => { e.currentTarget.style.transform = 'translateY(-8px)'; e.currentTarget.style.boxShadow = 'var(--shadow-premium)'; e.currentTarget.style.borderColor = 'var(--primary-300)'; }} onMouseOut={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.borderColor = 'var(--neutral-200)'; }}>
-                  <div style={{ height: '200px', backgroundColor: 'var(--neutral-100)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '64px', overflow: 'hidden', position: 'relative' }}>
+                <div key={product.id} className="product-card-category" style={{ backgroundColor: 'var(--white)', border: '1px solid var(--neutral-200)', borderRadius: '16px', overflow: 'hidden', cursor: 'pointer', display: 'flex', flexDirection: 'column' }}>
+                  <div style={{ height: '220px', borderRadius: '12px', backgroundColor: 'var(--neutral-50)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '64px', overflow: 'hidden', position: 'relative' }}>
                     {imageUrl ? (
                       <img src={imageUrl} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     ) : (
-                      '🌾'
+                      <div style={{ opacity: 0.5 }}>🌾</div>
                     )}
-                    {product.stockQuantity < 10 && product.stockQuantity > 0 && (
+                    <WishlistButton productId={product.id} />{product.stockQuantity < 10 && product.stockQuantity > 0 && (
                       <div style={{ position: 'absolute', top: '12px', left: '12px', backgroundColor: 'var(--warning)', color: 'white', padding: '4px 10px', borderRadius: '999px', fontSize: '11px', fontWeight: 'bold' }}>
                         Sisa {product.stockQuantity}!
                       </div>
