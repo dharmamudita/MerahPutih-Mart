@@ -14,7 +14,7 @@ export default function Footer() {
             </div>
           </div>
           <p className={styles.description}>
-            Aplikasi belanja sembako murah, segar, dan berkualitas langsung dari Koperasi Desa Merah Putih. Belanja cerdas, warga sejahtera.
+            Ekosistem belanja cerdas khusus untuk memajukan perekonomian desa. Kualitas premium, harga tangan pertama, dan langsung ke depan pintu Anda.
           </p>
         </div>
 
