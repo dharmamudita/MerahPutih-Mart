@@ -29,12 +29,11 @@ export default function Login() {
 
       if (res.ok && data.success) {
         // Save token to localStorage and cookies for middleware if needed
-        localStorage.setItem('token', data.data.token);
-        localStorage.setItem('user', JSON.stringify(data.data.user));
-        document.cookie = `token=${data.data.token}; path=/; max-age=86400`;
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('user', JSON.stringify(data.data));
+        document.cookie = `token=${data.token}; path=/; max-age=86400`;
         
-        router.push('/');
-        router.refresh(); // Refresh to update navbar state if it depends on user
+        window.location.href = '/'; // Hard redirect to force Navbar remount
       } else {
         setError(data.message || 'Email atau password salah.');
       }
