@@ -75,7 +75,7 @@ export default function CartPage() {
                       <span style={{ fontWeight: '700', color: 'var(--neutral-900)' }}>
                         Rp {(item.sellPrice * item.quantity).toLocaleString('id-ID')}
                       </span>
-                      <button onClick={() => removeItem(item.id)} style={{ color: 'var(--neutral-400)', background: 'none', border: 'none', cursor: 'pointer', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px' }} onMouseOver={(e) => e.currentTarget.style.color = 'var(--danger)'} onMouseOut={(e) => e.currentTarget.style.color = 'var(--neutral-400)'}>
+                      <button onClick={() => removeItem(item.id)} className="delete-btn-hover" style={{ color: 'var(--neutral-400)', background: 'none', border: 'none', cursor: 'pointer', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px' }}>
                         <Trash2 size={14} /> Hapus
                       </button>
                     </div>
