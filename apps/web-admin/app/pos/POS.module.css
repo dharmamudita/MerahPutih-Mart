@@ -1,0 +1,500 @@
+.container {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+  background-color: var(--neutral-100);
+}
+
+/* LEFT PANE: Product Catalog */
+.catalogPane {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--neutral-300);
+  background: var(--neutral-50);
+}
+
+.posHeader {
+  height: 70px;
+  background: var(--white);
+  border-bottom: 1px solid var(--neutral-200);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+}
+
+.headerLeft {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.backBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: var(--neutral-100);
+  color: var(--neutral-600);
+  transition: all 0.2s;
+}
+
+.backBtn:hover {
+  background: var(--neutral-200);
+}
+
+.logoText {
+  font-weight: 800;
+  font-size: 18px;
+  color: var(--neutral-900);
+}
+
+.searchBox {
+  display: flex;
+  align-items: center;
+  background: var(--neutral-100);
+  border-radius: 999px;
+  padding: 8px 16px;
+  width: 400px;
+}
+
+.searchInput {
+  border: none;
+  background: none;
+  outline: none;
+  width: 100%;
+  font-size: 14px;
+  margin-left: 8px;
+}
+
+.barcodeBtn {
+  color: var(--primary-600);
+  cursor: pointer;
+}
+
+.categories {
+  display: flex;
+  gap: 12px;
+  padding: 16px 24px;
+  overflow-x: auto;
+  border-bottom: 1px solid var(--neutral-200);
+  background: var(--white);
+}
+
+.categoryBtn {
+  padding: 8px 16px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  background: var(--neutral-100);
+  color: var(--neutral-600);
+  transition: all 0.2s;
+}
+
+.categoryBtn.active {
+  background: var(--primary-600);
+  color: var(--white);
+}
+
+.productGrid {
+  padding: 24px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 16px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.productCard {
+  background: var(--white);
+  border-radius: 12px;
+  border: 1px solid var(--neutral-200);
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  flex-direction: column;
+}
+
+.productCard:hover {
+  border-color: var(--primary-400);
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.1);
+  transform: translateY(-2px);
+}
+
+.productImage {
+  height: 140px;
+  background: var(--neutral-100);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.productInfo {
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.productName {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--neutral-900);
+  margin-bottom: 4px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.productPrice {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--primary-600);
+  margin-top: auto;
+}
+
+.productStock {
+  font-size: 12px;
+  color: var(--neutral-500);
+  margin-top: 4px;
+}
+
+/* RIGHT PANE: Cart */
+.cartPane {
+  width: 400px;
+  background: var(--white);
+  display: flex;
+  flex-direction: column;
+}
+
+.cartHeader {
+  height: 70px;
+  border-bottom: 1px solid var(--neutral-200);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+}
+
+.cartTitle {
+  font-weight: 700;
+  font-size: 16px;
+}
+
+.clearBtn {
+  color: var(--danger);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.cartBody {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.cartItem {
+  display: flex;
+  gap: 12px;
+  padding-bottom: 16px;
+  border-bottom: 1px dashed var(--neutral-200);
+}
+
+.cartItemImage {
+  width: 60px;
+  height: 60px;
+  border-radius: 8px;
+  background: var(--neutral-100);
+  object-fit: cover;
+}
+
+.cartItemInfo {
+  flex: 1;
+}
+
+.cartItemName {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--neutral-900);
+  margin-bottom: 4px;
+}
+
+.cartItemPrice {
+  font-size: 14px;
+  color: var(--primary-600);
+  font-weight: 700;
+}
+
+.cartItemActions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 8px;
+}
+
+.qtyControl {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--neutral-100);
+  border-radius: 8px;
+  padding: 4px;
+}
+
+.qtyBtn {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--white);
+  border-radius: 6px;
+  border: 1px solid var(--neutral-200);
+}
+
+.qtyValue {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.cartFooter {
+  padding: 24px;
+  border-top: 1px solid var(--neutral-200);
+  background: var(--neutral-50);
+}
+
+.customerSelect {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: var(--white);
+  border: 1px solid var(--neutral-200);
+  border-radius: 8px;
+  margin-bottom: 16px;
+  cursor: pointer;
+}
+
+.summaryRow {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  font-size: 14px;
+  color: var(--neutral-600);
+}
+
+.summaryTotal {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px dashed var(--neutral-300);
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--neutral-900);
+}
+
+.payBtn {
+  width: 100%;
+  padding: 16px;
+  background: var(--primary-600);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 700;
+  margin-top: 24px;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s;
+}
+
+.payBtn:hover {
+  background: var(--primary-700);
+}
+
+/* Modals */
+.modalOverlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.modal {
+  background: var(--white);
+  border-radius: 16px;
+  width: 500px;
+  max-width: 90%;
+  box-shadow: var(--shadow-xl);
+  display: flex;
+  flex-direction: column;
+}
+
+.modalHeader {
+  padding: 24px;
+  border-bottom: 1px solid var(--neutral-200);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modalTitle {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--neutral-900);
+}
+
+.closeBtn {
+  color: var(--neutral-500);
+  cursor: pointer;
+}
+
+.modalBody {
+  padding: 24px;
+}
+
+.paymentMethods {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.payMethodBtn {
+  padding: 16px;
+  border: 1px solid var(--neutral-200);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  color: var(--neutral-700);
+  transition: all 0.2s;
+}
+
+.payMethodBtn.active {
+  background: var(--primary-50);
+  border-color: var(--primary-500);
+  color: var(--primary-700);
+}
+
+.inputGroup {
+  margin-bottom: 16px;
+}
+
+.label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--neutral-700);
+  margin-bottom: 8px;
+}
+
+.inputLg {
+  width: 100%;
+  padding: 16px;
+  border: 1px solid var(--neutral-300);
+  border-radius: 12px;
+  font-size: 20px;
+  font-weight: 700;
+  outline: none;
+}
+
+.quickCash {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.cashBtn {
+  padding: 8px 12px;
+  background: var(--neutral-100);
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.changeAmount {
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--success);
+  text-align: center;
+  margin: 24px 0;
+}
+
+.modalFooter {
+  padding: 24px;
+  border-top: 1px solid var(--neutral-200);
+}
+
+/* Struk (Receipt) Modal */
+.strukContainer {
+  width: 320px;
+  margin: 0 auto;
+  padding: 20px;
+  background: white;
+  color: black;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 12px;
+  border: 1px solid #ddd;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.strukHeader {
+  text-align: center;
+  margin-bottom: 16px;
+  border-bottom: 1px dashed black;
+  padding-bottom: 12px;
+}
+
+.strukTitle {
+  font-size: 16px;
+  font-weight: bold;
+  margin-bottom: 4px;
+}
+
+.strukInfo {
+  margin-bottom: 12px;
+}
+
+.strukRow {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.strukItems {
+  border-top: 1px dashed black;
+  border-bottom: 1px dashed black;
+  padding: 12px 0;
+  margin-bottom: 12px;
+}
+
+.strukTotal {
+  font-weight: bold;
+  font-size: 14px;
+  margin-top: 8px;
+}
+
+.strukFooter {
+  text-align: center;
+  margin-top: 20px;
+  font-style: italic;
+}
