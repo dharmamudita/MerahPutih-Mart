@@ -16,4 +16,17 @@ router.post('/',
   productController.createProduct
 );
 
+router.put('/:id', 
+  verifyToken, 
+  authorize('SUPER_ADMIN', 'ADMIN_KOPDES'), 
+  upload.array('images', 5), 
+  productController.updateProduct
+);
+
+router.delete('/:id',
+  verifyToken,
+  authorize('SUPER_ADMIN', 'ADMIN_KOPDES'),
+  productController.deleteProduct
+);
+
 module.exports = router;
