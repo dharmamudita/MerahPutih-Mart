@@ -3,26 +3,57 @@ import { useState, useEffect } from 'react';
 import styles from './Produk.module.css';
 import { Plus, Search, Edit2, Trash2, Image as ImageIcon, QrCode } from 'lucide-react';
 import Link from 'next/link';
+import toast from 'react-hot-toast';
+import api from '../../lib/axios';
+import { DEV_KOPDES_ID } from '../../lib/constants';
 
 export default function ProdukClient() {
   const [products, setProducts] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [categories, setCategories] = useState([]);
 
-  // Mock data for UI Showcase
+  const fetchCategories = async () => {
+    try {
+      const res = await api.get(`/categories?kopdesId=${DEV_KOPDES_ID}`);
+      if (res.data.success) setCategories(res.data.data);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const fetchProducts = async () => {
+    try {
+      const res = await api.get(`/products?kopdesId=${DEV_KOPDES_ID}`);
+      if (res.data.success) {
+        setProducts(res.data.data);
+      }
+    } catch (error) {
+      toast.error('Gagal mengambil data produk.');
+    }
+  };
+
   useEffect(() => {
-    setProducts([
-      { id: 1, sku: 'BRS-001', name: 'Beras Premium 5kg', category: 'Sembako', buyPrice: 58000, sellPrice: 65000, stock: 2, minStock: 10, isActive: true, image: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&q=80&w=100' },
-      { id: 2, sku: 'MYK-002', name: 'Minyak Goreng 2L', category: 'Sembako', buyPrice: 26000, sellPrice: 30000, stock: 45, minStock: 20, isActive: true, image: 'https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?auto=format&fit=crop&q=80&w=100' },
-      { id: 3, sku: 'GLA-003', name: 'Gula Pasir 1kg', category: 'Sembako', buyPrice: 12000, sellPrice: 15000, stock: 20, minStock: 25, isActive: true, image: '' },
-      { id: 4, sku: 'PPK-004', name: 'Pupuk Urea 50kg', category: 'Pertanian', buyPrice: 115000, sellPrice: 125000, stock: 0, minStock: 5, isActive: false, image: '' },
-    ]);
+    fetchCategories();
+    fetchProducts();
   }, []);
+
+  const handleDelete = async (id) => {
+    if (confirm('Yakin ingin menghapus produk ini?')) {
+      try {
+        await api.delete(`/products/${id}`);
+        toast.success('Produk berhasil dihapus');
+        fetchProducts();
+      } catch (error) {
+        toast.error('Gagal menghapus produk');
+      }
+    }
+  };
 
   const filteredProducts = products.filter(p => {
     const matchSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase()) || p.sku.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchCategory = categoryFilter ? p.category === categoryFilter : true;
+    const matchCategory = categoryFilter ? p.categoryId === categoryFilter : true;
     const matchStatus = statusFilter === 'active' ? p.isActive : statusFilter === 'inactive' ? !p.isActive : true;
     return matchSearch && matchCategory && matchStatus;
   });
@@ -57,8 +88,9 @@ export default function ProdukClient() {
             </div>
             <select className={styles.select} value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)}>
               <option value="">Semua Kategori</option>
-              <option value="Sembako">Sembako</option>
-              <option value="Pertanian">Pertanian</option>
+              {categories.map(c => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
             </select>
             <select className={styles.select} value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
               <option value="">Semua Status</option>
@@ -86,7 +118,7 @@ export default function ProdukClient() {
                 <td className={styles.td}>
                   <div className={styles.productInfo}>
                     <div className={styles.productImage}>
-                      {p.image ? <img src={p.image} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <ImageIcon size={20} color="var(--neutral-400)" />}
+                      {p.images && p.images.length > 0 ? <img src={p.images[0].url} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <ImageIcon size={20} color="var(--neutral-400)" />}
                     </div>
                     <div>
                       <div className={styles.productName}>{p.name}</div>
@@ -94,10 +126,10 @@ export default function ProdukClient() {
                     </div>
                   </div>
                 </td>
-                <td className={styles.td}>{p.category}</td>
+                <td className={styles.td}>{p.category ? p.category.name : '-'}</td>
                 <td className={styles.td}>Rp {p.buyPrice.toLocaleString('id-ID')}</td>
                 <td className={styles.td} style={{ fontWeight: '600', color: 'var(--primary-700)' }}>Rp {p.sellPrice.toLocaleString('id-ID')}</td>
-                <td className={styles.td}>{getStockBadge(p.stock, p.minStock)}</td>
+                <td className={styles.td}>{getStockBadge(p.stockQuantity, p.minStock)}</td>
                 <td className={styles.td}>
                   <span className={`${styles.badge} ${p.isActive ? styles.badgeActive : styles.badgeInactive}`}>
                     {p.isActive ? 'Aktif' : 'Nonaktif'}
@@ -107,7 +139,7 @@ export default function ProdukClient() {
                   <div className={styles.actionCell}>
                     <button className={styles.iconBtn} title="Lihat QR Code"><QrCode size={16} /></button>
                     <Link href={`/produk/edit/${p.id}`} className={styles.iconBtn} title="Edit Produk"><Edit2 size={16} /></Link>
-                    <button className={styles.iconBtn} title="Hapus Produk" style={{ color: 'var(--danger)' }}><Trash2 size={16} /></button>
+                    <button className={styles.iconBtn} title="Hapus Produk" style={{ color: 'var(--danger)' }} onClick={() => handleDelete(p.id)}><Trash2 size={16} /></button>
                   </div>
                 </td>
               </tr>
