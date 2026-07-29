@@ -3,6 +3,8 @@ import { useState, useEffect } from 'react';
 import styles from './Kategori.module.css';
 import { Plus, Search, Edit2, Trash2, X } from 'lucide-react';
 import toast from 'react-hot-toast';
+import api from '../../lib/axios';
+import { DEV_KOPDES_ID } from '../../lib/constants';
 
 export default function KategoriClient() {
   const [categories, setCategories] = useState([]);
@@ -10,21 +12,28 @@ export default function KategoriClient() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState(null);
   const [formData, setFormData] = useState({ name: '', description: '' });
+  const [isLoading, setIsLoading] = useState(false);
 
-  // Mock data for UI Showcase
+  // Fetch data dari API
+  const fetchCategories = async () => {
+    try {
+      const res = await api.get(`/categories?kopdesId=${DEV_KOPDES_ID}`);
+      if (res.data.success) {
+        setCategories(res.data.data);
+      }
+    } catch (error) {
+      toast.error('Gagal mengambil data kategori dari server.');
+    }
+  };
+
   useEffect(() => {
-    setCategories([
-      { id: 1, name: 'Sembako', description: 'Beras, Minyak, Gula, dll', totalProducts: 45 },
-      { id: 2, name: 'Pertanian', description: 'Pupuk, Bibit, Obat Hama', totalProducts: 12 },
-      { id: 3, name: 'Makanan Ringan', description: 'Snack, Biskuit', totalProducts: 30 },
-      { id: 4, name: 'Minuman', description: 'Air mineral, Teh, Kopi', totalProducts: 25 },
-    ]);
+    fetchCategories();
   }, []);
 
   const handleOpenModal = (category = null) => {
     if (category) {
       setEditingCategory(category);
-      setFormData({ name: category.name, description: category.description });
+      setFormData({ name: category.name, description: category.description || '' });
     } else {
       setEditingCategory(null);
       setFormData({ name: '', description: '' });
@@ -38,27 +47,49 @@ export default function KategoriClient() {
     setEditingCategory(null);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.name) {
       toast.error('Nama kategori wajib diisi!');
       return;
     }
 
-    if (editingCategory) {
-      setCategories(categories.map(c => c.id === editingCategory.id ? { ...c, ...formData } : c));
-      toast.success('Kategori berhasil diupdate');
-    } else {
-      setCategories([...categories, { id: Date.now(), ...formData, totalProducts: 0 }]);
-      toast.success('Kategori berhasil ditambahkan');
+    setIsLoading(true);
+    try {
+      if (editingCategory) {
+        // Update API
+        await api.put(`/categories/${editingCategory.id}`, {
+          ...formData,
+          slug: formData.name.toLowerCase().replace(/ /g, '-')
+        });
+        toast.success('Kategori berhasil diupdate');
+      } else {
+        // Create API
+        await api.post('/categories', {
+          ...formData,
+          slug: formData.name.toLowerCase().replace(/ /g, '-'),
+          kopdesId: DEV_KOPDES_ID
+        });
+        toast.success('Kategori berhasil ditambahkan');
+      }
+      fetchCategories();
+      handleCloseModal();
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Terjadi kesalahan saat menyimpan kategori.');
+    } finally {
+      setIsLoading(false);
     }
-    handleCloseModal();
   };
 
-  const handleDelete = (id) => {
+  const handleDelete = async (id) => {
     if (confirm('Yakin ingin menghapus kategori ini?')) {
-      setCategories(categories.filter(c => c.id !== id));
-      toast.success('Kategori berhasil dihapus');
+      try {
+        await api.delete(`/categories/${id}`);
+        toast.success('Kategori berhasil dihapus');
+        fetchCategories();
+      } catch (error) {
+        toast.error(error.response?.data?.message || 'Gagal menghapus kategori.');
+      }
     }
   };
 
@@ -103,7 +134,7 @@ export default function KategoriClient() {
                 <td className={styles.td}>{cat.description}</td>
                 <td className={styles.td}>
                   <span style={{ background: 'var(--neutral-100)', padding: '4px 12px', borderRadius: '999px', fontSize: '12px', fontWeight: '600' }}>
-                    {cat.totalProducts} Produk
+                    {cat._count?.products || 0} Produk
                   </span>
                 </td>
                 <td className={styles.td}>
@@ -160,8 +191,10 @@ export default function KategoriClient() {
                 </div>
               </div>
               <div className={styles.modalFooter}>
-                <button type="button" className={styles.cancelBtn} onClick={handleCloseModal}>Batal</button>
-                <button type="submit" className={styles.saveBtn}>Simpan</button>
+                <button type="button" className={styles.cancelBtn} onClick={handleCloseModal} disabled={isLoading}>Batal</button>
+                <button type="submit" className={styles.saveBtn} disabled={isLoading}>
+                  {isLoading ? 'Menyimpan...' : 'Simpan'}
+                </button>
               </div>
             </form>
           </div>
