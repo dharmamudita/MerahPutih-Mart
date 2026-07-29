@@ -1,31 +1,38 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import styles from './TambahProduk.module.css';
-import { ChevronRight, Save, Image as ImageIcon, UploadCloud, X, QrCode } from 'lucide-react';
+import { ChevronRight, Save, UploadCloud, X, QrCode } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
+import api from '../../../lib/axios';
+import { DEV_KOPDES_ID } from '../../../lib/constants';
 
 export default function TambahProdukClient() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [categories, setCategories] = useState([]);
+  const [imageFile, setImageFile] = useState(null);
   const [formData, setFormData] = useState({
     name: '',
     sku: '',
     barcode: '',
     categoryId: '',
+    unitId: '',
     description: '',
     buyPrice: '',
     sellPrice: '',
-    tax: 0,
-    discount: 0,
-    stock: '',
-    minStock: '',
+    stockQuantity: '',
+    minStock: '5',
     weight: '',
     isActive: true
   });
-  
-  const [images, setImages] = useState([]);
+
+  useEffect(() => {
+    api.get(`/categories?kopdesId=${DEV_KOPDES_ID}`).then(res => {
+      if (res.data.success) setCategories(res.data.data);
+    }).catch(err => console.error(err));
+  }, []);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -39,7 +46,7 @@ export default function TambahProdukClient() {
     setFormData({ ...formData, isActive: !formData.isActive });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.name || !formData.categoryId || !formData.sellPrice) {
       toast.error('Harap isi field wajib (Nama, Kategori, Harga Jual)');
@@ -47,12 +54,35 @@ export default function TambahProdukClient() {
     }
     
     setLoading(true);
-    // Mock save
-    setTimeout(() => {
+    try {
+      const dataToSubmit = new FormData();
+      dataToSubmit.append('name', formData.name);
+      dataToSubmit.append('sku', formData.sku);
+      dataToSubmit.append('slug', formData.name.toLowerCase().replace(/ /g, '-'));
+      dataToSubmit.append('categoryId', formData.categoryId);
+      dataToSubmit.append('buyPrice', formData.buyPrice);
+      dataToSubmit.append('sellPrice', formData.sellPrice);
+      dataToSubmit.append('stockQuantity', formData.stockQuantity);
+      dataToSubmit.append('minStock', formData.minStock);
+      dataToSubmit.append('description', formData.description);
+      dataToSubmit.append('kopdesId', DEV_KOPDES_ID);
+      dataToSubmit.append('isActive', formData.isActive);
+
+      if (imageFile) {
+        dataToSubmit.append('images', imageFile);
+      }
+
+      await api.post('/products', dataToSubmit, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      
       toast.success('Produk berhasil ditambahkan!');
-      setLoading(false);
       router.push('/produk');
-    }, 1000);
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Gagal menyimpan produk.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -75,7 +105,6 @@ export default function TambahProdukClient() {
       </div>
 
       <div className={styles.formGrid}>
-        {/* Kolom Utama */}
         <div className={styles.mainCol}>
           <div className={styles.card}>
             <div className={styles.cardTitle}>Informasi Umum</div>
@@ -90,9 +119,9 @@ export default function TambahProdukClient() {
                 <label className={styles.label}>Kategori *</label>
                 <select name="categoryId" className={styles.input} value={formData.categoryId} onChange={handleChange} required>
                   <option value="">-- Pilih Kategori --</option>
-                  <option value="1">Sembako</option>
-                  <option value="2">Pertanian</option>
-                  <option value="3">Minuman</option>
+                  {categories.map(c => (
+                    <option key={c.id} value={c.id}>{c.name}</option>
+                  ))}
                 </select>
               </div>
               <div className={styles.formGroup}>
@@ -116,23 +145,14 @@ export default function TambahProdukClient() {
               <UploadCloud size={32} className={styles.uploadIcon} />
               <div>
                 <div className={styles.uploadTitle}>Klik untuk upload atau drag and drop</div>
-                <div className={styles.uploadSubtitle}>PNG, JPG, JPEG (Max. 5MB) - Maks 5 foto</div>
+                <div className={styles.uploadSubtitle}>PNG, JPG, JPEG (Max. 5MB)</div>
               </div>
+              <input type="file" onChange={(e) => setImageFile(e.target.files[0])} style={{ opacity: 0, position: 'absolute', width: '100%', height: '100%', cursor: 'pointer' }} />
             </div>
-            
-            {images.length > 0 && (
-              <div className={styles.imageGrid}>
-                {/* Mock Image Display */}
-                <div className={styles.imagePreview}>
-                  <button type="button" className={styles.removeImageBtn}><X size={14}/></button>
-                  <img src="https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&q=80&w=150" alt="preview" style={{width: '100%', height: '100%', objectFit: 'cover'}} />
-                </div>
-              </div>
-            )}
           </div>
 
           <div className={styles.card}>
-            <div className={styles.cardTitle}>Harga & Pajak</div>
+            <div className={styles.cardTitle}>Harga</div>
             <div className={styles.row}>
               <div className={styles.formGroup}>
                 <label className={styles.label}>Harga Beli (Modal)</label>
@@ -149,26 +169,9 @@ export default function TambahProdukClient() {
                 </div>
               </div>
             </div>
-            <div className={styles.row}>
-              <div className={styles.formGroup}>
-                <label className={styles.label}>Pajak PPN (%)</label>
-                <div className={styles.inputSuffix}>
-                  <input type="number" name="tax" className={styles.input} placeholder="11" style={{ width: '100%', paddingRight: '40px' }} value={formData.tax} onChange={handleChange} />
-                  <span className={styles.suffix}>%</span>
-                </div>
-              </div>
-              <div className={styles.formGroup}>
-                <label className={styles.label}>Diskon Promo (Rp)</label>
-                <div className={styles.inputPrefix}>
-                  <span className={styles.prefix}>Rp</span>
-                  <input type="number" name="discount" className={`${styles.input} ${styles.inputWithPrefix}`} placeholder="0" value={formData.discount} onChange={handleChange} />
-                </div>
-              </div>
-            </div>
           </div>
         </div>
 
-        {/* Kolom Kanan */}
         <div className={styles.sideCol}>
           <div className={styles.card}>
             <div className={styles.cardTitle}>Status Produk</div>
@@ -177,7 +180,7 @@ export default function TambahProdukClient() {
                 <div className={styles.toggleSlider}></div>
               </div>
               <span style={{ fontWeight: '600', color: formData.isActive ? 'var(--success)' : 'var(--neutral-500)' }}>
-                {formData.isActive ? 'Aktif (Tampil di Web)' : 'Nonaktif (Disembunyikan)'}
+                {formData.isActive ? 'Aktif' : 'Nonaktif'}
               </span>
             </div>
           </div>
@@ -185,11 +188,11 @@ export default function TambahProdukClient() {
           <div className={styles.card}>
             <div className={styles.cardTitle}>Manajemen Stok</div>
             <div className={styles.formGroup}>
-              <label className={styles.label}>Stok Awal</label>
-              <input type="number" name="stock" className={styles.input} placeholder="0" value={formData.stock} onChange={handleChange} />
+              <label className={styles.label}>Stok Awal *</label>
+              <input type="number" name="stockQuantity" className={styles.input} required placeholder="0" value={formData.stockQuantity} onChange={handleChange} />
             </div>
             <div className={styles.formGroup}>
-              <label className={styles.label}>Batas Stok Minimum (Peringatan)</label>
+              <label className={styles.label}>Batas Stok Minimum</label>
               <input type="number" name="minStock" className={styles.input} placeholder="5" value={formData.minStock} onChange={handleChange} />
             </div>
           </div>
