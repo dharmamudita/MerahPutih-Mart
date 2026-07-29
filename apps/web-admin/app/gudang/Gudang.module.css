@@ -1,0 +1,178 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.pageHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.pageTitle {
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--neutral-900);
+}
+
+.actions {
+  display: flex;
+  gap: 12px;
+}
+
+.btnPrimary {
+  background: var(--primary-600);
+  color: white;
+  padding: 10px 16px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  font-size: 14px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btnPrimary:hover {
+  background: var(--primary-700);
+}
+
+.btnSecondary {
+  background: var(--white);
+  color: var(--neutral-700);
+  border: 1px solid var(--neutral-300);
+  padding: 10px 16px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btnSecondary:hover {
+  background: var(--neutral-50);
+}
+
+/* Tabs */
+.tabsContainer {
+  background: var(--white);
+  border-radius: 12px;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--neutral-200);
+  overflow: hidden;
+}
+
+.tabsHeader {
+  display: flex;
+  border-bottom: 1px solid var(--neutral-200);
+}
+
+.tabBtn {
+  padding: 16px 24px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--neutral-500);
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s;
+}
+
+.tabBtn:hover {
+  color: var(--neutral-900);
+  background: var(--neutral-50);
+}
+
+.tabBtn.active {
+  color: var(--primary-600);
+  border-bottom-color: var(--primary-600);
+  background: var(--primary-50);
+}
+
+.tabContent {
+  padding: 24px;
+}
+
+/* Table */
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.th {
+  text-align: left;
+  padding: 16px 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--neutral-500);
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--neutral-200);
+}
+
+.td {
+  padding: 16px 0;
+  border-bottom: 1px solid var(--neutral-100);
+  font-size: 14px;
+  color: var(--neutral-700);
+  vertical-align: middle;
+}
+
+.tr:hover .td {
+  background: var(--neutral-50);
+}
+
+.badge {
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  display: inline-block;
+}
+
+.type-IN { background: var(--success-bg); color: var(--success); }
+.type-OUT { background: var(--danger-bg); color: var(--danger); }
+.type-ADJUST { background: var(--warning-bg); color: var(--warning); }
+
+/* Form Styles for Stock Opname */
+.formCard {
+  background: var(--white);
+  border: 1px solid var(--neutral-200);
+  border-radius: 12px;
+  padding: 24px;
+  max-width: 600px;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--neutral-700);
+}
+
+.input, .select, .textarea {
+  padding: 10px 14px;
+  border: 1px solid var(--neutral-300);
+  border-radius: 8px;
+  font-size: 14px;
+  outline: none;
+  font-family: inherit;
+}
+
+.input:focus, .select:focus, .textarea:focus {
+  border-color: var(--primary-500);
+}
+
+.textarea {
+  min-height: 100px;
+  resize: vertical;
+}
