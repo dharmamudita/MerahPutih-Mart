@@ -151,8 +151,54 @@ const getOrderById = async (req, res) => {
   }
 };
 
+const getAllOrders = async (req, res) => {
+  try {
+    const { kopdesId } = req.query;
+    const whereClause = kopdesId ? { kopdesId } : {};
+
+    const orders = await prisma.order.findMany({
+      where: whereClause,
+      include: {
+        items: {
+          include: { product: { select: { name: true, sku: true } } }
+        },
+        user: { select: { name: true, phone: true } }
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+    res.status(200).json({ success: true, data: orders });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Gagal mengambil data pesanan.' });
+  }
+};
+
+const updateOrderStatus = async (req, res) => {
+  try {
+    const { status } = req.body;
+    const orderId = req.params.id;
+
+    const order = await prisma.order.update({
+      where: { id: orderId },
+      data: {
+        status,
+        statusHistory: {
+          create: {
+            status,
+            notes: `Status diubah menjadi ${status} oleh Admin`
+          }
+        }
+      }
+    });
+    res.status(200).json({ success: true, data: order, message: 'Status pesanan berhasil diperbarui.' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Gagal memperbarui status pesanan.' });
+  }
+};
+
 module.exports = {
   checkout,
   getOrderHistory,
-  getOrderById
+  getOrderById,
+  getAllOrders,
+  updateOrderStatus
 };
