@@ -5,6 +5,8 @@ import { ArrowLeft, Search, ScanLine, UserPlus, Trash2, Minus, Plus, CreditCard,
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
+import api from '../../lib/axios';
+import { DEV_KOPDES_ID } from '../../lib/constants';
 
 export default function POSClient() {
   const router = useRouter();
@@ -18,37 +20,66 @@ export default function POSClient() {
   const [lastTransaction, setLastTransaction] = useState(null);
   const [paymentMethod, setPaymentMethod] = useState('Tunai'); // Tunai, QRIS
   const [cashAmount, setCashAmount] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
-  // Mock Products
-  const products = [
-    { id: 1, name: 'Beras Premium 5kg', price: 65000, category: 'Sembako', stock: 12, image: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&q=80&w=150' },
-    { id: 2, name: 'Minyak Goreng 2L', price: 30000, category: 'Sembako', stock: 45, image: 'https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?auto=format&fit=crop&q=80&w=150' },
-    { id: 3, name: 'Gula Pasir 1kg', price: 15000, category: 'Sembako', stock: 20, image: '' },
-    { id: 4, name: 'Pupuk Urea 50kg', price: 125000, category: 'Pertanian', stock: 5, image: '' },
-    { id: 5, name: 'Indomie Goreng', price: 3000, category: 'Makanan', stock: 100, image: '' },
-  ];
+  // Data dari API
+  const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState(['Semua']);
 
-  const categories = ['Semua', 'Sembako', 'Pertanian', 'Makanan', 'Minuman'];
+  const fetchData = async () => {
+    try {
+      const [catRes, prodRes] = await Promise.all([
+        api.get(`/categories?kopdesId=${DEV_KOPDES_ID}`),
+        api.get(`/products?kopdesId=${DEV_KOPDES_ID}`)
+      ]);
+      
+      if (catRes.data.success) {
+        setCategories(['Semua', ...catRes.data.data.map(c => c.name)]);
+      }
+      if (prodRes.data.success) {
+        // Hanya yang aktif dan stoknya lebih dari 0
+        const activeProducts = prodRes.data.data.filter(p => p.isActive && p.stockQuantity > 0);
+        setProducts(activeProducts);
+      }
+    } catch (error) {
+      toast.error('Gagal memuat katalog POS.');
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
 
   const filteredProducts = products.filter(p => {
-    const matchSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchCategory = activeCategory === 'Semua' ? true : p.category === activeCategory;
+    const matchSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase()) || p.sku.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchCategory = activeCategory === 'Semua' ? true : (p.category && p.category.name === activeCategory);
     return matchSearch && matchCategory;
   });
 
   const addToCart = (product) => {
     const existing = cart.find(item => item.id === product.id);
     if (existing) {
-      setCart(cart.map(item => item.id === product.id ? { ...item, qty: item.qty + 1 } : item));
+      if (existing.qty < product.stockQuantity) {
+        setCart(cart.map(item => item.id === product.id ? { ...item, qty: item.qty + 1 } : item));
+      } else {
+        toast.error(`Stok maksimal ${product.stockQuantity}!`);
+      }
     } else {
-      setCart([...cart, { ...product, qty: 1 }]);
+      if (product.stockQuantity > 0) {
+        setCart([...cart, { ...product, qty: 1 }]);
+      }
     }
   };
 
   const updateQty = (id, delta) => {
+    const product = products.find(p => p.id === id);
     setCart(cart.map(item => {
       if (item.id === id) {
         const newQty = item.qty + delta;
+        if (newQty > product.stockQuantity) {
+          toast.error(`Stok maksimal ${product.stockQuantity}!`);
+          return item;
+        }
         return newQty > 0 ? { ...item, qty: newQty } : item;
       }
       return item;
@@ -59,35 +90,58 @@ export default function POSClient() {
     setCart(cart.filter(item => item.id !== id));
   };
 
-  const subtotal = cart.reduce((acc, item) => acc + (item.price * item.qty), 0);
+  const subtotal = cart.reduce((acc, item) => acc + (item.sellPrice * item.qty), 0);
   const tax = subtotal * 0.11; // PPN 11%
   const grandTotal = subtotal + tax;
 
   const changeAmount = Number(cashAmount) - grandTotal;
 
-  const handleProcessPayment = () => {
+  const handleProcessPayment = async () => {
     if (paymentMethod === 'Tunai' && Number(cashAmount) < grandTotal) {
       toast.error('Uang tunai kurang!');
       return;
     }
     
-    // Save transaction for receipt
-    setLastTransaction({
-      date: new Date().toLocaleString('id-ID'),
-      items: [...cart],
-      subtotal,
-      tax,
-      grandTotal,
-      paymentMethod,
-      cashAmount: Number(cashAmount),
-      change: changeAmount
-    });
+    setIsLoading(true);
+    try {
+      // Siapkan payload
+      const items = cart.map(item => ({
+        id: item.id,
+        qty: item.qty,
+        price: item.sellPrice
+      }));
 
-    toast.success('Pembayaran Berhasil!');
-    setCart([]);
-    setIsPaymentModalOpen(false);
-    setCashAmount('');
-    setIsStrukModalOpen(true);
+      // Kirim ke API
+      const res = await api.post('/pos/checkout', { items, kopdesId: DEV_KOPDES_ID });
+      
+      if (res.data.success) {
+        // Save transaction for receipt
+        setLastTransaction({
+          invoice: res.data.data.invoiceNumber,
+          date: new Date().toLocaleString('id-ID'),
+          items: [...cart],
+          subtotal,
+          tax,
+          grandTotal,
+          paymentMethod,
+          cashAmount: Number(cashAmount),
+          change: changeAmount
+        });
+
+        toast.success('Pembayaran Berhasil!');
+        setCart([]);
+        setIsPaymentModalOpen(false);
+        setCashAmount('');
+        setIsStrukModalOpen(true);
+        
+        // Refresh katalog untuk update stok
+        fetchData();
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Gagal memproses transaksi.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -130,12 +184,12 @@ export default function POSClient() {
           {filteredProducts.map(p => (
             <div key={p.id} className={styles.productCard} onClick={() => addToCart(p)}>
               <div className={styles.productImage}>
-                {p.image ? <img src={p.image} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{fontSize: '24px'}}>📦</span>}
+                {p.images && p.images.length > 0 ? <img src={p.images[0].url} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{fontSize: '24px'}}>📦</span>}
               </div>
               <div className={styles.productInfo}>
                 <div className={styles.productName}>{p.name}</div>
-                <div className={styles.productStock}>Stok: {p.stock}</div>
-                <div className={styles.productPrice}>Rp {p.price.toLocaleString('id-ID')}</div>
+                <div className={styles.productStock}>Stok: {p.stockQuantity}</div>
+                <div className={styles.productPrice}>Rp {p.sellPrice.toLocaleString('id-ID')}</div>
               </div>
             </div>
           ))}
@@ -160,7 +214,7 @@ export default function POSClient() {
               <div key={item.id} className={styles.cartItem}>
                 <div className={styles.cartItemInfo}>
                   <div className={styles.cartItemName}>{item.name}</div>
-                  <div className={styles.cartItemPrice}>Rp {item.price.toLocaleString('id-ID')}</div>
+                  <div className={styles.cartItemPrice}>Rp {item.sellPrice.toLocaleString('id-ID')}</div>
                   
                   <div className={styles.cartItemActions}>
                     <div className={styles.qtyControl}>
@@ -172,7 +226,7 @@ export default function POSClient() {
                   </div>
                 </div>
                 <div style={{ fontWeight: '700', fontSize: '14px', alignSelf: 'flex-end', paddingBottom: '12px' }}>
-                  Rp {(item.price * item.qty).toLocaleString('id-ID')}
+                  Rp {(item.sellPrice * item.qty).toLocaleString('id-ID')}
                 </div>
               </div>
             ))
@@ -277,9 +331,9 @@ export default function POSClient() {
                 className={styles.payBtn} 
                 style={{ marginTop: 0 }}
                 onClick={handleProcessPayment}
-                disabled={paymentMethod === 'Tunai' && Number(cashAmount) < grandTotal}
+                disabled={isLoading || (paymentMethod === 'Tunai' && Number(cashAmount) < grandTotal)}
               >
-                Proses Pembayaran
+                {isLoading ? 'Memproses...' : 'Proses Pembayaran'}
               </button>
             </div>
           </div>
@@ -304,8 +358,8 @@ export default function POSClient() {
                 
                 <div className={styles.strukInfo}>
                   <div className={styles.strukRow}><span>Waktu:</span><span>{lastTransaction.date}</span></div>
-                  <div className={styles.strukRow}><span>Kasir:</span><span>Budi Santoso</span></div>
-                  <div className={styles.strukRow}><span>Struk:</span><span>INV-{Date.now().toString().slice(-6)}</span></div>
+                  <div className={styles.strukRow}><span>Kasir:</span><span>Super Admin</span></div>
+                  <div className={styles.strukRow}><span>Struk:</span><span>{lastTransaction.invoice}</span></div>
                 </div>
 
                 <div className={styles.strukItems}>
@@ -313,8 +367,8 @@ export default function POSClient() {
                     <div key={item.id} style={{ marginBottom: '8px' }}>
                       <div>{item.name}</div>
                       <div className={styles.strukRow}>
-                        <span>{item.qty} x {item.price.toLocaleString('id-ID')}</span>
-                        <span>{(item.qty * item.price).toLocaleString('id-ID')}</span>
+                        <span>{item.qty} x {item.sellPrice.toLocaleString('id-ID')}</span>
+                        <span>{(item.qty * item.sellPrice).toLocaleString('id-ID')}</span>
                       </div>
                     </div>
                   ))}
