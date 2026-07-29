@@ -1,27 +1,75 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import styles from './Keuangan.module.css';
 import { Download, Plus, Wallet, TrendingUp, TrendingDown, ArrowDownRight, ArrowUpRight, X } from 'lucide-react';
 import toast from 'react-hot-toast';
+import api from '../../lib/axios';
+import { DEV_KOPDES_ID } from '../../lib/constants';
 
 export default function KeuanganClient() {
   const [filterType, setFilterType] = useState('ALL'); // ALL, IN, OUT
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const [transactions] = useState([
-    { id: 'TRX-231024-01', date: '24 Okt 2023, 15:30', description: 'Pendapatan Penjualan POS (Shift Siang)', type: 'IN', amount: 1250000, category: 'Penjualan' },
-    { id: 'TRX-231024-02', date: '24 Okt 2023, 11:00', description: 'Pendapatan E-commerce (INV-001)', type: 'IN', amount: 175000, category: 'Penjualan' },
-    { id: 'TRX-231023-03', date: '23 Okt 2023, 09:00', description: 'Pembayaran Tagihan Listrik Koperasi', type: 'OUT', amount: 450000, category: 'Operasional' },
-    { id: 'TRX-231022-04', date: '22 Okt 2023, 14:00', description: 'Pembelian Stok Barang (PT Bumi Pangan)', type: 'OUT', amount: 2500000, category: 'Pembelian' },
-    { id: 'TRX-231021-05', date: '21 Okt 2023, 08:30', description: 'Pendapatan Penjualan POS (Shift Pagi)', type: 'IN', amount: 850000, category: 'Penjualan' },
-  ]);
+  const [transactions, setTransactions] = useState([]);
+  const [summary, setSummary] = useState({ totalIncome: 0, totalExpense: 0, balance: 0 });
 
-  const filteredTransactions = filterType === 'ALL' ? transactions : transactions.filter(t => t.type === filterType);
+  // Form states
+  const [formData, setFormData] = useState({
+    category: '',
+    amount: '',
+    description: '',
+    date: new Date().toISOString().split('T')[0]
+  });
 
-  const handleSavePengeluaran = (e) => {
+  const fetchData = async () => {
+    try {
+      const [transRes, sumRes] = await Promise.all([
+        api.get(`/finance/cashflow?kopdesId=${DEV_KOPDES_ID}`),
+        api.get(`/finance/summary?kopdesId=${DEV_KOPDES_ID}`)
+      ]);
+      
+      if (transRes.data.success) {
+        setTransactions(transRes.data.data);
+      }
+      if (sumRes.data.success) {
+        setSummary(sumRes.data.data);
+      }
+    } catch (error) {
+      toast.error('Gagal memuat data keuangan');
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const filteredTransactions = filterType === 'ALL' ? transactions : transactions.filter(t => (t.type === 'INCOME' || t.type === 'IN') ? filterType === 'IN' : filterType === 'OUT');
+
+  const handleSavePengeluaran = async (e) => {
     e.preventDefault();
-    toast.success('Pengeluaran berhasil dicatat ke Buku Besar');
-    setIsModalOpen(false);
+    setIsLoading(true);
+    try {
+      const payload = {
+        type: 'OUT',
+        category: formData.category,
+        amount: formData.amount,
+        description: formData.description,
+        kopdesId: DEV_KOPDES_ID
+      };
+
+      const res = await api.post('/finance/cashflow', payload);
+      if (res.data.success) {
+        toast.success('Pengeluaran berhasil dicatat ke Buku Besar');
+        setIsModalOpen(false);
+        setFormData({ category: '', amount: '', description: '', date: new Date().toISOString().split('T')[0] });
+        fetchData();
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Gagal mencatat pengeluaran');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -47,31 +95,31 @@ export default function KeuanganClient() {
             <div className={styles.kpiTitle}>Saldo Kas Utama</div>
             <Wallet size={20} className={styles.kpiIcon} />
           </div>
-          <div className={styles.kpiValue}>Rp 15.450.000</div>
+          <div className={styles.kpiValue}>Rp {summary.balance.toLocaleString('id-ID')}</div>
           <div className={`${styles.kpiTrend} ${styles.up}`}>
-            <ArrowUpRight size={14} /> +Rp 2.500.000 bulan ini
+            <ArrowUpRight size={14} /> Total Saldo Aktif
           </div>
         </div>
         <div className={styles.kpiCard}>
           <div className={styles.kpiHeader}>
-            <div className={styles.kpiTitle}>Pemasukan (Bulan Ini)</div>
+            <div className={styles.kpiTitle}>Pemasukan (Total)</div>
             <TrendingUp size={20} className={styles.kpiIcon} color="var(--success)" />
           </div>
-          <div className={styles.kpiValue} style={{ color: 'var(--success)' }}>Rp 8.250.000</div>
+          <div className={styles.kpiValue} style={{ color: 'var(--success)' }}>Rp {summary.totalIncome.toLocaleString('id-ID')}</div>
         </div>
         <div className={styles.kpiCard}>
           <div className={styles.kpiHeader}>
-            <div className={styles.kpiTitle}>Pengeluaran (Bulan Ini)</div>
+            <div className={styles.kpiTitle}>Pengeluaran (Total)</div>
             <TrendingDown size={20} className={styles.kpiIcon} color="var(--danger)" />
           </div>
-          <div className={styles.kpiValue} style={{ color: 'var(--danger)' }}>Rp 3.100.000</div>
+          <div className={styles.kpiValue} style={{ color: 'var(--danger)' }}>Rp {summary.totalExpense.toLocaleString('id-ID')}</div>
         </div>
         <div className={styles.kpiCard}>
           <div className={styles.kpiHeader}>
             <div className={styles.kpiTitle}>Laba Kasar</div>
             <Wallet size={20} className={styles.kpiIcon} color="var(--primary-600)" />
           </div>
-          <div className={styles.kpiValue} style={{ color: 'var(--primary-600)' }}>Rp 5.150.000</div>
+          <div className={styles.kpiValue} style={{ color: 'var(--primary-600)' }}>Rp {(summary.totalIncome - summary.totalExpense).toLocaleString('id-ID')}</div>
         </div>
       </div>
 
@@ -105,21 +153,21 @@ export default function KeuanganClient() {
             {filteredTransactions.map(t => (
               <tr key={t.id} className={styles.tr}>
                 <td className={styles.td}>
-                  <div className={styles.dateText} style={{ fontSize: '13px', fontWeight: '600' }}>{t.date}</div>
-                  <div className={styles.refText}>{t.id}</div>
+                  <div className={styles.dateText} style={{ fontSize: '13px', fontWeight: '600' }}>{new Date(t.createdAt).toLocaleString('id-ID')}</div>
+                  <div className={styles.refText}>{t.id.substring(0, 10)}...</div>
                 </td>
                 <td className={styles.td}>
                   <div className={styles.descText}>{t.description}</div>
                 </td>
                 <td className={styles.td}>{t.category}</td>
                 <td className={styles.td}>
-                  <span className={`${styles.badge} ${styles['badge-' + t.type]}`}>
-                    {t.type === 'IN' ? <ArrowUpRight size={14}/> : <ArrowDownRight size={14}/>}
-                    {t.type === 'IN' ? 'Pemasukan' : 'Pengeluaran'}
+                  <span className={`${styles.badge} ${styles['badge-' + ((t.type === 'IN' || t.type === 'INCOME') ? 'IN' : 'OUT')]}`}>
+                    {(t.type === 'IN' || t.type === 'INCOME') ? <ArrowUpRight size={14}/> : <ArrowDownRight size={14}/>}
+                    {(t.type === 'IN' || t.type === 'INCOME') ? 'Pemasukan' : 'Pengeluaran'}
                   </span>
                 </td>
-                <td className={styles.td} style={{ textAlign: 'right', fontWeight: '800', color: t.type === 'IN' ? 'var(--success)' : 'var(--danger)' }}>
-                  {t.type === 'IN' ? '+' : '-'} Rp {t.amount.toLocaleString('id-ID')}
+                <td className={styles.td} style={{ textAlign: 'right', fontWeight: '800', color: (t.type === 'IN' || t.type === 'INCOME') ? 'var(--success)' : 'var(--danger)' }}>
+                  {(t.type === 'IN' || t.type === 'INCOME') ? '+' : '-'} Rp {t.amount.toLocaleString('id-ID')}
                 </td>
               </tr>
             ))}
@@ -138,30 +186,33 @@ export default function KeuanganClient() {
               <div className={styles.modalBody}>
                 <div className={styles.formGroup}>
                   <label className={styles.label}>Kategori Pengeluaran *</label>
-                  <select className={styles.select} required>
+                  <select className={styles.select} required value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})}>
                     <option value="">Pilih Kategori...</option>
-                    <option value="operasional">Biaya Operasional (Listrik, Air, Internet)</option>
-                    <option value="gaji">Gaji Pegawai / Kasir</option>
-                    <option value="maintenance">Perbaikan / Maintenance</option>
-                    <option value="lainnya">Lain-lain</option>
+                    <option value="Operasional">Biaya Operasional (Listrik, Air, Internet)</option>
+                    <option value="Gaji">Gaji Pegawai / Kasir</option>
+                    <option value="Pembelian">Pembelian Stok Barang / Supplier</option>
+                    <option value="Maintenance">Perbaikan / Maintenance</option>
+                    <option value="Lainnya">Lain-lain</option>
                   </select>
                 </div>
                 <div className={styles.formGroup}>
                   <label className={styles.label}>Nominal (Rp) *</label>
-                  <input type="number" className={styles.input} required placeholder="0" />
+                  <input type="number" className={styles.input} required placeholder="0" value={formData.amount} onChange={e => setFormData({...formData, amount: e.target.value})} />
                 </div>
                 <div className={styles.formGroup}>
                   <label className={styles.label}>Keterangan *</label>
-                  <textarea className={styles.textarea} required placeholder="Jelaskan untuk apa pengeluaran ini..."></textarea>
+                  <textarea className={styles.textarea} required placeholder="Jelaskan untuk apa pengeluaran ini..." value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})}></textarea>
                 </div>
                 <div className={styles.formGroup}>
                   <label className={styles.label}>Tanggal Transaksi</label>
-                  <input type="date" className={styles.input} defaultValue={new Date().toISOString().split('T')[0]} />
+                  <input type="date" className={styles.input} value={formData.date} onChange={e => setFormData({...formData, date: e.target.value})} />
                 </div>
               </div>
               <div className={styles.modalFooter}>
                 <button type="button" className={styles.btnSecondary} onClick={() => setIsModalOpen(false)}>Batal</button>
-                <button type="submit" className={styles.btnPrimary} style={{ background: 'var(--danger)' }}>Simpan Pengeluaran</button>
+                <button type="submit" className={styles.btnPrimary} style={{ background: 'var(--danger)' }} disabled={isLoading}>
+                  {isLoading ? 'Menyimpan...' : 'Simpan Pengeluaran'}
+                </button>
               </div>
             </form>
           </div>
