@@ -51,6 +51,18 @@ const checkoutPOS = async (req, res) => {
         });
       }
 
+      // 3. Catat Arus Kas Masuk (Pemasukan)
+      await prisma.cashFlow.create({
+        data: {
+          kopdesId: req.user.kopdesId || kopdesId,
+          type: 'IN',
+          category: 'SALES',
+          amount: totalAmount,
+          description: `Pendapatan dari penjualan POS (Invoice: ${invoiceNumber})`,
+          referenceId: order.id
+        }
+      });
+
       return order;
     });
 
