@@ -15,4 +15,16 @@ router.post('/',
   categoryController.createCategory
 );
 
+router.put('/:id',
+  verifyToken,
+  authorize('SUPER_ADMIN', 'ADMIN_KOPDES'),
+  categoryController.updateCategory
+);
+
+router.delete('/:id',
+  verifyToken,
+  authorize('SUPER_ADMIN', 'ADMIN_KOPDES'),
+  categoryController.deleteCategory
+);
+
 module.exports = router;
