@@ -1,12 +1,29 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import styles from './Laporan.module.css';
 import { Download, FileText, Printer, BarChart2, PieChart } from 'lucide-react';
 import toast from 'react-hot-toast';
+import api from '../../lib/axios';
+import { DEV_KOPDES_ID } from '../../lib/constants';
 
 export default function LaporanClient() {
   const [dateFrom, setDateFrom] = useState('2023-10-01');
   const [dateTo, setDateTo] = useState('2023-10-31');
+  const [stats, setStats] = useState({ totalRevenue: 0, totalSalesCount: 0, topProducts: [] });
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const res = await api.get(`/reports/dashboard?kopdesId=${DEV_KOPDES_ID}`);
+        if (res.data.success) {
+          setStats(res.data.data);
+        }
+      } catch (error) {
+        toast.error('Gagal memuat laporan');
+      }
+    };
+    fetchStats();
+  }, []);
 
   const handleExportPDF = () => {
     toast.success('Mengunduh Laporan Laba Rugi (PDF)...');
@@ -56,34 +73,22 @@ export default function LaporanClient() {
           </div>
           
           <div className={styles.statRow}>
-            <span className={styles.statLabel}>Pendapatan Penjualan (POS)</span>
-            <span className={styles.statValue}>Rp 24.500.000</span>
-          </div>
-          <div className={styles.statRow}>
-            <span className={styles.statLabel}>Pendapatan Penjualan (Online)</span>
-            <span className={styles.statValue}>Rp 12.350.000</span>
+            <span className={styles.statLabel}>Total Transaksi Sukses</span>
+            <span className={styles.statValue}>{stats.totalSalesCount} Transaksi</span>
           </div>
           <div className={styles.statRow} style={{ borderBottom: '2px solid var(--neutral-800)' }}>
             <span className={styles.statLabel} style={{ fontWeight: '700', color: 'var(--neutral-900)' }}>Total Pendapatan Kotor</span>
-            <span className={styles.statValue}>Rp 36.850.000</span>
+            <span className={styles.statValue}>Rp {stats.totalRevenue.toLocaleString('id-ID')}</span>
           </div>
 
           <div className={styles.statRow} style={{ marginTop: '16px' }}>
-            <span className={styles.statLabel}>Harga Pokok Penjualan (HPP)</span>
-            <span className={styles.statValue} style={{ color: 'var(--danger)' }}>- Rp 22.100.000</span>
+            <span className={styles.statLabel}>Harga Pokok Penjualan (HPP) (Estimasi)</span>
+            <span className={styles.statValue} style={{ color: 'var(--danger)' }}>- Rp {(stats.totalRevenue * 0.7).toLocaleString('id-ID')}</span>
           </div>
-          <div className={styles.statRow}>
-            <span className={styles.statLabel}>Biaya Operasional (Listrik, Pegawai)</span>
-            <span className={styles.statValue} style={{ color: 'var(--danger)' }}>- Rp 3.400.000</span>
-          </div>
-          <div className={styles.statRow}>
-            <span className={styles.statLabel}>Diskon & Promo</span>
-            <span className={styles.statValue} style={{ color: 'var(--danger)' }}>- Rp 500.000</span>
-          </div>
-
+          
           <div className={`${styles.statRow} ${styles.highlightRow}`}>
-            <span className={styles.statLabel}>LABA BERSIH KOPERASI</span>
-            <span className={styles.statValue}>Rp 10.850.000</span>
+            <span className={styles.statLabel}>LABA BERSIH ESTIMASI (30%)</span>
+            <span className={styles.statValue}>Rp {(stats.totalRevenue * 0.3).toLocaleString('id-ID')}</span>
           </div>
         </div>
 
@@ -104,36 +109,19 @@ export default function LaporanClient() {
               </tr>
             </thead>
             <tbody>
-              <tr>
-                <td className={styles.td} style={{ fontWeight: '800', color: 'var(--primary-600)' }}>#1</td>
-                <td className={styles.td}>Beras Premium 5kg</td>
-                <td className={styles.td}>145 Sak</td>
-                <td className={styles.td} style={{ textAlign: 'right', fontWeight: '600' }}>Rp 9.425.000</td>
-              </tr>
-              <tr>
-                <td className={styles.td} style={{ fontWeight: '800', color: 'var(--primary-500)' }}>#2</td>
-                <td className={styles.td}>Gula Pasir 1kg</td>
-                <td className={styles.td}>210 Pcs</td>
-                <td className={styles.td} style={{ textAlign: 'right', fontWeight: '600' }}>Rp 3.150.000</td>
-              </tr>
-              <tr>
-                <td className={styles.td} style={{ fontWeight: '800', color: 'var(--primary-400)' }}>#3</td>
-                <td className={styles.td}>Minyak Goreng 2L</td>
-                <td className={styles.td}>85 Pouch</td>
-                <td className={styles.td} style={{ textAlign: 'right', fontWeight: '600' }}>Rp 2.550.000</td>
-              </tr>
-              <tr>
-                <td className={styles.td} style={{ fontWeight: '700', color: 'var(--neutral-500)' }}>#4</td>
-                <td className={styles.td}>Indomie Goreng</td>
-                <td className={styles.td}>450 Pcs</td>
-                <td className={styles.td} style={{ textAlign: 'right', fontWeight: '600' }}>Rp 1.350.000</td>
-              </tr>
-              <tr>
-                <td className={styles.td} style={{ fontWeight: '700', color: 'var(--neutral-500)' }}>#5</td>
-                <td className={styles.td}>Pupuk Urea 50kg</td>
-                <td className={styles.td}>10 Sak</td>
-                <td className={styles.td} style={{ textAlign: 'right', fontWeight: '600' }}>Rp 1.250.000</td>
-              </tr>
+              {stats.topProducts.map((p, i) => (
+                <tr key={i}>
+                  <td className={styles.td} style={{ fontWeight: '800', color: i === 0 ? 'var(--primary-600)' : (i === 1 ? 'var(--primary-500)' : 'var(--neutral-500)') }}>#{i+1}</td>
+                  <td className={styles.td}>{p.name}</td>
+                  <td className={styles.td}>{p.qty} Pcs</td>
+                  <td className={styles.td} style={{ textAlign: 'right', fontWeight: '600' }}>Rp {p.revenue.toLocaleString('id-ID')}</td>
+                </tr>
+              ))}
+              {stats.topProducts.length === 0 && (
+                <tr>
+                  <td colSpan="4" className={styles.td} style={{ textAlign: 'center' }}>Belum ada data penjualan</td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
