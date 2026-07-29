@@ -1,9 +1,6 @@
 import localFont from "next/font/local";
 import "./globals.css";
-import Sidebar from "../components/Sidebar";
-import Header from "../components/Header";
-import styles from "../components/AdminLayout.module.css";
-import { Toaster } from 'react-hot-toast';
+import AdminLayoutWrapper from "../components/AdminLayoutWrapper";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -25,16 +22,9 @@ export default function RootLayout({ children }) {
   return (
     <html lang="id">
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
-        <div className={styles.adminLayout}>
-          <Sidebar />
-          <div className={styles.mainContent}>
-            <Header />
-            <main className={styles.pageContent}>
-              {children}
-            </main>
-          </div>
-        </div>
-        <Toaster position="top-right" />
+        <AdminLayoutWrapper>
+          {children}
+        </AdminLayoutWrapper>
       </body>
     </html>
   );
