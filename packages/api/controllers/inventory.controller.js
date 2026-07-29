@@ -35,36 +35,81 @@ const mutateStock = async (req, res) => {
     const qty = parseInt(quantity, 10);
     if (qty <= 0) return res.status(400).json({ success: false, message: 'Kuantitas harus lebih dari 0.' });
 
-    const product = await prisma.product.findUnique({ where: { id: productId } });
-    if (!product) return res.status(404).json({ success: false, message: 'Produk tidak ditemukan.' });
+    // Atomic Transaction: Update stok dan catat riwayat
+    const result = await prisma.$transaction(async (prisma) => {
+      const product = await prisma.product.findUnique({ where: { id: productId } });
+      if (!product) throw new Error('Produk tidak ditemukan.');
 
-    if (type === 'OUT' && product.stockQuantity < qty) {
-      return res.status(400).json({ success: false, message: 'Stok tidak mencukupi untuk dikeluarkan.' });
-    }
-
-    // Karena di Prisma Schema kita belum membuat tabel khusus StockMovement untuk MVP ini,
-    // kita cukup meng-update stockQuantity di tabel Product
-    const updatedProduct = await prisma.product.update({
-      where: { id: productId },
-      data: {
-        stockQuantity: type === 'IN' 
-          ? { increment: qty } 
-          : { decrement: qty }
+      if (type === 'OUT' && product.stockQuantity < qty) {
+        throw new Error('Stok tidak mencukupi untuk dikeluarkan.');
       }
+
+      const previousQty = product.stockQuantity;
+      const currentQty = type === 'IN' ? previousQty + qty : previousQty - qty;
+
+      const updatedProduct = await prisma.product.update({
+        where: { id: productId },
+        data: { stockQuantity: currentQty }
+      });
+
+      const movement = await prisma.stockMovement.create({
+        data: {
+          productId,
+          kopdesId: req.user.kopdesId || updatedProduct.kopdesId,
+          type: type === 'IN' ? 'IN' : (reason === 'Barang Rusak' ? 'DAMAGED' : (reason === 'Barang Kadaluarsa' ? 'EXPIRED' : 'OUT')),
+          quantity: qty,
+          previousQty,
+          currentQty,
+          notes: reason || 'Penyesuaian manual',
+          createdBy: req.user.name || 'Admin'
+        }
+      });
+
+      // Jika IN dan ada opsi bayar supplier, catat pengeluaran (tapi kita skip dulu sesuai persetujuan default)
+
+      return { updatedProduct, movement };
     });
 
     res.status(200).json({ 
       success: true, 
       message: `Stok berhasil di${type === 'IN' ? 'tambah' : 'kurangi'}.`, 
-      data: updatedProduct 
+      data: result.updatedProduct 
     });
   } catch (error) {
     console.error('Inventory mutation error:', error);
+    if (error.message) {
+      return res.status(400).json({ success: false, message: error.message });
+    }
     res.status(500).json({ success: false, message: 'Gagal melakukan mutasi stok.' });
+  }
+};
+
+/**
+ * Mendapatkan riwayat mutasi stok
+ */
+const getMovements = async (req, res) => {
+  try {
+    const { kopdesId } = req.query;
+    const whereClause = kopdesId ? { kopdesId } : {};
+
+    const movements = await prisma.stockMovement.findMany({
+      where: whereClause,
+      include: {
+        product: { select: { id: true, name: true, sku: true } }
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 50 // Limit 50 data terakhir untuk riwayat
+    });
+
+    res.status(200).json({ success: true, data: movements });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: 'Gagal memuat riwayat stok.' });
   }
 };
 
 module.exports = {
   getInventory,
-  mutateStock
+  mutateStock,
+  getMovements
 };
