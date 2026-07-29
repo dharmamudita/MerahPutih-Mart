@@ -82,7 +82,55 @@ const createCategory = async (req, res) => {
   }
 };
 
+/**
+ * Update a category
+ */
+const updateCategory = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, slug, description } = req.body;
+    
+    // Authorization check could be added here to ensure they own the category
+
+    const updatedCategory = await prisma.category.update({
+      where: { id },
+      data: { name, slug, description }
+    });
+
+    res.status(200).json({ success: true, message: 'Kategori berhasil diupdate', data: updatedCategory });
+  } catch (error) {
+    console.error('Error updating category:', error);
+    res.status(500).json({ success: false, message: 'Gagal mengupdate kategori.' });
+  }
+};
+
+/**
+ * Delete a category
+ */
+const deleteCategory = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Optional: Cek apakah masih ada produk di kategori ini sebelum menghapus
+    const count = await prisma.product.count({ where: { categoryId: id } });
+    if (count > 0) {
+      return res.status(400).json({ success: false, message: 'Tidak bisa menghapus kategori yang masih memiliki produk.' });
+    }
+
+    await prisma.category.delete({
+      where: { id }
+    });
+
+    res.status(200).json({ success: true, message: 'Kategori berhasil dihapus' });
+  } catch (error) {
+    console.error('Error deleting category:', error);
+    res.status(500).json({ success: false, message: 'Gagal menghapus kategori.' });
+  }
+};
+
 module.exports = {
   getAllCategories,
-  createCategory
+  createCategory,
+  updateCategory,
+  deleteCategory
 };
