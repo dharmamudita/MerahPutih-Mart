@@ -18,6 +18,8 @@ const reviewRoutes = require('./routes/review.routes');
 const notificationRoutes = require('./routes/notification.routes');
 const memberRoutes = require('./routes/member.routes');
 const supplierRoutes = require('./routes/supplier.routes');
+const financeRoutes = require('./routes/finance.routes');
+const reportRoutes = require('./routes/report.routes');
 
 const app = express();
 const server = http.createServer(app);
@@ -50,6 +52,8 @@ app.use('/api/reviews', reviewRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/member', memberRoutes);
 app.use('/api/suppliers', supplierRoutes);
+app.use('/api/finance', financeRoutes);
+app.use('/api/reports', reportRoutes);
 
 app.get('/', (req, res) => {
   res.json({ message: 'Welcome to KopDes Merah Putih Shared API' });
