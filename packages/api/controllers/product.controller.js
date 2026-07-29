@@ -161,8 +161,68 @@ const createProduct = async (req, res) => {
   }
 };
 
+/**
+ * Update a product
+ */
+const updateProduct = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { 
+      sku, barcode, name, slug, description, 
+      buyPrice, sellPrice, discount, stockQuantity, minStock,
+      categoryId, brandId, unitId, isActive
+    } = req.body;
+
+    const data = {
+      sku, barcode, name, slug, description,
+      categoryId: categoryId || null,
+      brandId: brandId || null,
+      unitId: unitId || null
+    };
+
+    if (buyPrice !== undefined) data.buyPrice = parseFloat(buyPrice);
+    if (sellPrice !== undefined) data.sellPrice = parseFloat(sellPrice);
+    if (discount !== undefined) data.discount = parseFloat(discount);
+    if (stockQuantity !== undefined) data.stockQuantity = parseInt(stockQuantity);
+    if (minStock !== undefined) data.minStock = parseInt(minStock);
+    if (isActive !== undefined) data.isActive = (isActive === 'true' || isActive === true);
+
+    const updatedProduct = await prisma.product.update({
+      where: { id },
+      data
+    });
+
+    res.status(200).json({ success: true, message: 'Produk berhasil diupdate', data: updatedProduct });
+  } catch (error) {
+    console.error('Error updating product:', error);
+    res.status(500).json({ success: false, message: 'Gagal mengupdate produk.' });
+  }
+};
+
+/**
+ * Delete a product
+ */
+const deleteProduct = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // TODO: Cek apakah produk ini ada di transaksi/order, jika ada mungkin lebih baik diset isActive = false saja
+
+    await prisma.product.delete({
+      where: { id }
+    });
+
+    res.status(200).json({ success: true, message: 'Produk berhasil dihapus' });
+  } catch (error) {
+    console.error('Error deleting product:', error);
+    res.status(500).json({ success: false, message: 'Gagal menghapus produk.' });
+  }
+};
+
 module.exports = {
   getAllProducts,
   getProductByIdOrSlug,
-  createProduct
+  createProduct,
+  updateProduct,
+  deleteProduct
 };
