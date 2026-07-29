@@ -1,57 +1,67 @@
-import styles from './Sidebar.module.css';
+'use client';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import styles from './AdminLayout.module.css';
 import { 
-  Home, 
-  Store, 
+  LayoutDashboard, 
+  Package, 
+  Tags, 
+  ShoppingCart, 
   Users, 
-  Activity, 
-  Database, 
-  Tag, 
-  PieChart, 
-  FileText, 
+  Wallet,
   Settings,
+  Store,
+  Box,
+  Truck,
+  CreditCard,
   LogOut,
-  ShoppingCart
+  ChevronRight
 } from 'lucide-react';
 
-export default function Sidebar({ role = 'SUPER_ADMIN' }) {
-  const superAdminMenus = [
-    { title: 'Dashboard', icon: <Home size={20} />, href: '/dashboard' },
-    { title: 'Manajemen Kopdes', icon: <Store size={20} />, href: '/kopdes' },
-    { title: 'Manajemen Pengguna', icon: <Users size={20} />, href: '/users' },
-    { title: 'Monitoring', icon: <Activity size={20} />, href: '/monitoring' },
-    { title: 'Master Data', icon: <Database size={20} />, href: '/master-data' },
-    { title: 'Manajemen Promo', icon: <Tag size={20} />, href: '/promo' },
-    { title: 'Dashboard Analitik', icon: <PieChart size={20} />, href: '/analytics' },
-    { title: 'Laporan', icon: <FileText size={20} />, href: '/reports' },
-    { title: 'Pengaturan Sistem', icon: <Settings size={20} />, href: '/settings' },
-  ];
+const MENU_ITEMS = [
+  { name: 'Dashboard', path: '/', icon: LayoutDashboard },
+  { name: 'Kategori Produk', path: '/kategori', icon: Tags },
+  { name: 'Produk', path: '/produk', icon: Package },
+  { name: 'Gudang & Stok', path: '/gudang', icon: Box },
+  { name: 'Supplier', path: '/supplier', icon: Truck },
+  { name: 'Kasir (POS)', path: '/pos', icon: Store },
+  { name: 'Pesanan Online', path: '/pesanan', icon: ShoppingCart },
+  { name: 'Pelanggan', path: '/pelanggan', icon: Users },
+  { name: 'Keuangan', path: '/keuangan', icon: Wallet },
+  { name: 'Laporan', path: '/laporan', icon: CreditCard },
+  { name: 'Pengaturan', path: '/pengaturan', icon: Settings },
+];
 
-  const kopdesAdminMenus = [
-    { title: 'Dashboard', icon: <Home size={20} />, href: '/dashboard' },
-    { title: 'Kasir (POS)', icon: <ShoppingCart size={20} />, href: '/pos' },
-    { title: 'Manajemen Produk', icon: <Tag size={20} />, href: '/products' },
-    { title: 'Kategori', icon: <Database size={20} />, href: '/categories' },
-    { title: 'Gudang & Stok', icon: <Store size={20} />, href: '/warehouse' },
-    { title: 'Supplier', icon: <Users size={20} />, href: '/suppliers' },
-    { title: 'Pesanan Online', icon: <Activity size={20} />, href: '/orders' },
-    { title: 'Laporan', icon: <FileText size={20} />, href: '/reports' },
-  ];
-
-  const menus = role === 'SUPER_ADMIN' ? superAdminMenus : kopdesAdminMenus;
+export default function Sidebar() {
+  const pathname = usePathname();
 
   return (
     <aside className={styles.sidebar}>
-      <div className={styles.menuContainer}>
-        {menus.map((menu, index) => (
-          <Link key={index} href={menu.href} className={styles.menuItem}>
-            <span className={styles.icon}>{menu.icon}</span>
-            <span className={styles.title}>{menu.title}</span>
-          </Link>
-        ))}
+      <div className={styles.sidebarHeader}>
+        <div className={styles.logoBadge}>KD</div>
+        <div className={styles.logoText}>
+          <div className={styles.logoTitle}>Admin Kopdes</div>
+          <div className={styles.logoSubtitle}>Merah Putih</div>
+        </div>
       </div>
+      
+      <nav className={styles.sidebarNav}>
+        <div className={styles.navGroup}>MAIN MENU</div>
+        {MENU_ITEMS.map((item) => {
+          const isActive = pathname === item.path || (item.path !== '/' && pathname.startsWith(item.path));
+          const Icon = item.icon;
+          
+          return (
+            <Link key={item.path} href={item.path} className={`${styles.navItem} ${isActive ? styles.active : ''}`}>
+              <Icon size={20} className={styles.navIcon} />
+              <span className={styles.navText}>{item.name}</span>
+              {isActive && <ChevronRight size={16} className={styles.navArrow} />}
+            </Link>
+          );
+        })}
+      </nav>
 
-      <div className={styles.footer}>
+      <div className={styles.sidebarFooter}>
         <button className={styles.logoutBtn}>
           <LogOut size={20} />
           <span>Keluar</span>
