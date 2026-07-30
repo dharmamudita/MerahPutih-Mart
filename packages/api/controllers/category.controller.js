@@ -128,8 +128,54 @@ const deleteCategory = async (req, res) => {
   }
 };
 
+/**
+ * Get category by ID
+ */
+const getCategoryById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const category = await prisma.category.findUnique({
+      where: { id },
+      include: { _count: { select: { products: true } } }
+    });
+
+    if (!category) {
+      return res.status(404).json({ success: false, message: 'Kategori tidak ditemukan.' });
+    }
+
+    res.status(200).json({ success: true, data: category });
+  } catch (error) {
+    console.error('Error fetching category:', error);
+    res.status(500).json({ success: false, message: 'Gagal mengambil data kategori.' });
+  }
+};
+
+/**
+ * Get category by slug
+ */
+const getCategoryBySlug = async (req, res) => {
+  try {
+    const { slug } = req.params;
+    const category = await prisma.category.findFirst({
+      where: { slug },
+      include: { _count: { select: { products: true } } }
+    });
+
+    if (!category) {
+      return res.status(404).json({ success: false, message: 'Kategori tidak ditemukan.' });
+    }
+
+    res.status(200).json({ success: true, data: category });
+  } catch (error) {
+    console.error('Error fetching category:', error);
+    res.status(500).json({ success: false, message: 'Gagal mengambil data kategori.' });
+  }
+};
+
 module.exports = {
   getAllCategories,
+  getCategoryById,
+  getCategoryBySlug,
   createCategory,
   updateCategory,
   deleteCategory

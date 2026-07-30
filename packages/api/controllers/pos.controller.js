@@ -78,18 +78,21 @@ const checkoutPOS = async (req, res) => {
 
     const changeAmount = amountPaid ? amountPaid - totalAmount : 0;
 
-    const newOrder = await prisma.$transaction(async (prisma) => {
+    // Ambil kopdesId — fallback ke kopdes pertama
+    const targetKopdesId = req.user.kopdesId || kopdesId || (await prisma.kopdes.findFirst()).id;
+
+    const newOrder = await prisma.$transaction(async (tx) => {
       // 1. Buat record Order POS
-      const order = await prisma.order.create({
+      const order = await tx.order.create({
         data: {
           orderNo,
-          kopdesId: req.user.kopdesId || kopdesId || null,
+          user: { connect: { id: req.user.id } },
+          kopdes: { connect: { id: targetKopdesId } },
           totalAmount,
           type: 'PICKUP',
           status: 'COMPLETED',
           paymentMethod: paymentMethod || 'CASH',
           notes: 'Transaksi Offline POS',
-          changeAmount: changeAmount > 0 ? changeAmount : 0,
 
           items: {
             create: items.map(item => {
@@ -134,16 +137,16 @@ const checkoutPOS = async (req, res) => {
           referenceId: order.id
 =======
         const pid = item.productId || item.id;
-        await prisma.product.update({
+        await tx.product.update({
           where: { id: pid },
           data: { stockQuantity: { decrement: item.qty || item.quantity } }
         });
       }
 
       // 3. Catat Arus Kas Masuk
-      await prisma.cashFlow.create({
+      await tx.cashFlow.create({
         data: {
-          kopdesId: req.user.kopdesId || kopdesId,
+          kopdesId: targetKopdesId,
           type: 'INCOME',
           category: 'SALES',
           amount: totalAmount,

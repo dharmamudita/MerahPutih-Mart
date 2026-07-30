@@ -36,8 +36,7 @@ async function main() {
       id: 'super_admin_id',
 >>>>>>> 18373dc (code review)
       email: 'admin@merahputih.id',
-      // Password hash untuk: admin123 (nanti pakai bcrypt di production, ini dummy dulu)
-      password: 'hashed_password_placeholder', 
+      password: 'hashed_password_placeholder',
       name: 'Super Admin Pusat',
       role: 'SUPER_ADMIN',
       status: 'ACTIVE'

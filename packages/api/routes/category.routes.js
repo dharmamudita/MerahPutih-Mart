@@ -6,6 +6,8 @@ const upload = require('../middleware/upload');
 
 // Public route (bisa diakses customer)
 router.get('/', categoryController.getAllCategories);
+router.get('/:id', categoryController.getCategoryById);
+router.get('/slug/:slug', categoryController.getCategoryBySlug);
 
 // Protected routes
 router.post('/', 
