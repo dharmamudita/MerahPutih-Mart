@@ -1,5 +1,9 @@
+<<<<<<< HEAD
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
+=======
+const { prisma } = require('database');
+>>>>>>> 18373dc (code review)
 
 // Ambil semua notifikasi user
 const getNotifications = async (req, res) => {

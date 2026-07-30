@@ -1,5 +1,9 @@
+<<<<<<< HEAD
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
+=======
+const { prisma } = require('database');
+>>>>>>> 18373dc (code review)
 
 const checkout = async (req, res) => {
   try {
@@ -93,7 +97,11 @@ const checkout = async (req, res) => {
       for (const item of items) {
         await tx.product.update({
           where: { id: item.productId },
+<<<<<<< HEAD
           data: { stock: { decrement: item.quantity } }
+=======
+          data: { stockQuantity: { decrement: item.quantity } }
+>>>>>>> 18373dc (code review)
         });
       }
 

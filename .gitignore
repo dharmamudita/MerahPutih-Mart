@@ -40,3 +40,10 @@ packages/database/prisma/migrations/
 # Misc
 *.tsbuildinfo
 coverage/
+<<<<<<< HEAD
+=======
+
+.claude/
+
+KONTEKS.md
+>>>>>>> 18373dc (code review)

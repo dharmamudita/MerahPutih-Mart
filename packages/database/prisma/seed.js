@@ -9,6 +9,10 @@ async function main() {
     where: { code: 'KOPDES-001' },
     update: {},
     create: {
+<<<<<<< HEAD
+=======
+      id: 'kopdes-001',
+>>>>>>> 18373dc (code review)
       code: 'KOPDES-001',
       name: 'Koperasi Desa Merah Putih (Pusat)',
       description: 'Koperasi percontohan utama untuk program Merah Putih',
@@ -27,6 +31,10 @@ async function main() {
     where: { email: 'admin@merahputih.id' },
     update: {},
     create: {
+<<<<<<< HEAD
+=======
+      id: 'super_admin_id',
+>>>>>>> 18373dc (code review)
       email: 'admin@merahputih.id',
       // Password hash untuk: admin123 (nanti pakai bcrypt di production, ini dummy dulu)
       password: 'hashed_password_placeholder', 
@@ -46,6 +54,7 @@ async function main() {
   ];
 
   for (const cat of categories) {
+<<<<<<< HEAD
     await prisma.category.upsert({
       where: { slug_kopdesId: { slug: cat.slug, kopdesId: '' } }, // Dummy where since we don't know the exact unique constraint matching here. Wait, schema says @@unique([slug, kopdesId]). But kopdesId is optional. If null, Prisma might complain about unique on null. Let's just create them.
       update: {},
@@ -55,6 +64,14 @@ async function main() {
         const existing = await prisma.category.findFirst({ where: { slug: cat.slug }});
         if (!existing) await prisma.category.create({ data: cat });
     });
+=======
+    const existing = await prisma.category.findFirst({ where: { slug: cat.slug, kopdesId: null } });
+    if (!existing) {
+      await prisma.category.create({ data: cat });
+    } else {
+      await prisma.category.update({ where: { id: existing.id }, data: cat });
+    }
+>>>>>>> 18373dc (code review)
   }
   console.log('✅ Categories created');
 
@@ -181,6 +198,62 @@ async function main() {
     }
   }
 
+<<<<<<< HEAD
+=======
+  // 6. Buat Dummy Transactions (POS)
+  console.log('Membuat dummy transactions...');
+  for (let i = 1; i <= 5; i++) {
+    await prisma.transaction.create({
+      data: {
+        invoiceNo: `INV-POS-${Date.now()}-${i}`,
+        kopdesId: kopdes.id,
+        cashierId: admin.id,
+        subtotal: 50000 * i,
+        taxAmount: 5500 * i,
+        totalAmount: 55500 * i,
+        paymentMethod: 'CASH',
+        status: 'COMPLETED',
+        createdAt: new Date(Date.now() - i * 86400000) // i days ago
+      }
+    });
+  }
+  console.log('✅ Transactions created');
+
+  // 7. Buat Dummy Orders (E-commerce)
+  console.log('Membuat dummy orders...');
+  for (let i = 1; i <= 5; i++) {
+    await prisma.order.create({
+      data: {
+        orderNo: `ORD-ONL-${Date.now()}-${i}`,
+        kopdesId: kopdes.id,
+        userId: admin.id, // Just reuse admin as customer
+        status: 'COMPLETED',
+        subtotal: 75000 * i,
+        taxAmount: 8250 * i,
+        totalAmount: 83250 * i,
+        paymentMethod: 'TRANSFER',
+        createdAt: new Date(Date.now() - i * 43200000) // i half-days ago
+      }
+    });
+  }
+  console.log('✅ Orders created');
+
+  // 8. Buat Dummy Daily Deposits
+  console.log('Membuat dummy deposits...');
+  for (let i = 1; i <= 3; i++) {
+    await prisma.dailyDeposit.create({
+      data: {
+        kopdesId: kopdes.id,
+        userId: admin.id,
+        date: new Date(Date.now() - i * 86400000),
+        amount: 500000 * i,
+        status: i === 1 ? 'PENDING' : 'VERIFIED'
+      }
+    });
+  }
+  console.log('✅ Deposits created');
+
+>>>>>>> 18373dc (code review)
   console.log('Seeder selesai! 🎉');
 }
 

@@ -1,7 +1,11 @@
 'use client';
 import { useState, useEffect } from 'react';
 import styles from './POS.module.css';
+<<<<<<< HEAD
 import { ArrowLeft, Search, ScanLine, UserPlus, Trash2, Minus, Plus, CreditCard, Banknote, Printer } from 'lucide-react';
+=======
+import { ArrowLeft, Search, ScanLine, UserPlus, Trash2, Minus, Plus, CreditCard, Banknote, Printer, X, QrCode } from 'lucide-react';
+>>>>>>> 18373dc (code review)
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
