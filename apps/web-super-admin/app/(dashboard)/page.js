@@ -1,4 +1,5 @@
 'use client';
+import { apiFetch } from '../../lib/api';
 import { useState, useEffect } from 'react';
 import { Building2, Users, ShoppingCart, TrendingUp, Wallet, MapPin, Activity, ArrowUpRight } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
@@ -12,7 +13,7 @@ export default function SuperAdminDashboard() {
     // Karena kita baru menghubungkan backend, untuk UI testing kita bisa pasang mock jika API belum ready.
     const fetchDashboard = async () => {
       try {
-        const res = await fetch('http://localhost:5000/api/superadmin/dashboard');
+        const res = await apiFetch('/superadmin/dashboard');
         const json = await res.json();
         if (json.success) {
           setStats(json.data);

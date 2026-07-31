@@ -1,4 +1,5 @@
 'use client';
+import { apiFetch } from '../../../lib/api';
 import { useState, useEffect } from 'react';
 import { Users, Plus, Search, ShieldCheck, UserX, UserCheck } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -22,7 +23,7 @@ export default function ManajemenPengguna() {
 
   const fetchUsers = async () => {
     try {
-      const res = await fetch('http://localhost:5000/api/superadmin/users');
+      const res = await apiFetch('/superadmin/users');
       const json = await res.json();
       if (json.success) setUsers(json.data);
     } catch (error) {
@@ -34,7 +35,7 @@ export default function ManajemenPengguna() {
 
   const fetchKopdes = async () => {
     try {
-      const res = await fetch('http://localhost:5000/api/superadmin/kopdes');
+      const res = await apiFetch('/superadmin/kopdes');
       const json = await res.json();
       if (json.success) setKopdesList(json.data);
     } catch (error) {
@@ -55,7 +56,7 @@ export default function ManajemenPengguna() {
 
     setIsSubmitting(true);
     try {
-      const res = await fetch('http://localhost:5000/api/superadmin/users', {
+      const res = await apiFetch('/superadmin/users', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData)
@@ -80,7 +81,7 @@ export default function ManajemenPengguna() {
   const toggleStatus = async (id, currentStatus) => {
     const newStatus = currentStatus === 'ACTIVE' ? 'BLOCKED' : 'ACTIVE';
     try {
-      const res = await fetch(`http://localhost:5000/api/superadmin/users/${id}/status`, {
+      const res = await apiFetch(`/superadmin/users/${id}/status`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: newStatus })

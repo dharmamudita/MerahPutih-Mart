@@ -1,4 +1,5 @@
 'use client';
+import { apiFetch } from '../../../lib/api';
 import { useState, useEffect } from 'react';
 import { Building2, Plus, Search, Edit2, PowerOff, CheckCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -20,7 +21,7 @@ export default function ManajemenKopdes() {
 
   const fetchKopdes = async () => {
     try {
-      const res = await fetch('http://localhost:5000/api/superadmin/kopdes');
+      const res = await apiFetch('/superadmin/kopdes');
       const json = await res.json();
       if (json.success) setKopdesList(json.data);
     } catch (error) {
@@ -38,7 +39,7 @@ export default function ManajemenKopdes() {
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      const res = await fetch('http://localhost:5000/api/superadmin/kopdes', {
+      const res = await apiFetch('/superadmin/kopdes', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData)
@@ -62,7 +63,7 @@ export default function ManajemenKopdes() {
   const toggleStatus = async (id, currentStatus) => {
     const newStatus = currentStatus === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE';
     try {
-      const res = await fetch(`http://localhost:5000/api/superadmin/kopdes/${id}/status`, {
+      const res = await apiFetch(`/superadmin/kopdes/${id}/status`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: newStatus })

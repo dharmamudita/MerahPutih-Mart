@@ -1,4 +1,5 @@
 'use client';
+import { apiFetch } from '../../../lib/api';
 import { useState, useEffect } from 'react';
 import { Package, Plus, Trash2, Tag, Search } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -16,7 +17,7 @@ export default function MasterData() {
 
   const fetchCategories = async () => {
     try {
-      const res = await fetch('http://localhost:5000/api/superadmin/categories');
+      const res = await apiFetch('/superadmin/categories');
       const json = await res.json();
       if (json.success) setCategories(json.data);
     } catch (error) {
@@ -29,7 +30,7 @@ export default function MasterData() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetch('http://localhost:5000/api/superadmin/categories', {
+      const res = await apiFetch('/superadmin/categories', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData)
@@ -48,7 +49,7 @@ export default function MasterData() {
   const handleDelete = async (id) => {
     if (!confirm('Apakah Anda yakin ingin menghapus kategori ini?')) return;
     try {
-      const res = await fetch(`http://localhost:5000/api/superadmin/categories/${id}`, { method: 'DELETE' });
+      const res = await apiFetch(`/superadmin/categories/${id}`, { method: 'DELETE' });
       if (res.ok) {
         toast.success('Kategori berhasil dihapus');
         fetchCategories();

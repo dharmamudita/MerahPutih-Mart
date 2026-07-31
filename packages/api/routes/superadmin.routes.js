@@ -11,7 +11,6 @@ const { verifyToken, authorize } = require('../middleware/auth');
 
 // Hanya bisa diakses oleh Super Admin (Pusat)
 // router.use(verifyToken, authorize('SUPER_ADMIN')); // Kita matikan dulu authorize-nya jika mau tes tanpa token strict
-// Untuk kemudahan tes kita bisa bypass auth (atau kita gunakan DEV_KOPDES_ID logic jika belum ada auth system khusus)
 
 router.get('/dashboard', superAdminController.getNationalDashboard);
 

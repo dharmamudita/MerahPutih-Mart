@@ -1,9 +1,4 @@
-<<<<<<< HEAD
-const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient();
-=======
 const { prisma } = require('database');
->>>>>>> 18373dc (code review)
 
 const getAddresses = async (req, res) => {
   try {
@@ -28,8 +23,8 @@ const getAddresses = async (req, res) => {
 
 const createAddress = async (req, res) => {
   try {
-    const { label, recipientName, phone, address, province, city, district, postalCode, isDefault } = req.body;
-    
+    const { label, recipientName, phone, address, province, city, district, subdistrict, postalCode, isDefault } = req.body;
+
     let customer = await prisma.customer.findUnique({
       where: { userId: req.user.id }
     });
@@ -37,7 +32,10 @@ const createAddress = async (req, res) => {
     if (!customer) {
       // Jika belum ada customer profile, buatkan
       customer = await prisma.customer.create({
-        data: { userId: req.user.id }
+        data: {
+          userId: req.user.id,
+          user: { connect: { id: req.user.id } }
+        }
       });
     }
 
@@ -51,7 +49,7 @@ const createAddress = async (req, res) => {
 
     const newAddress = await prisma.customerAddress.create({
       data: {
-        customerId: customer.id,
+        customer: { connect: { id: customer.id } },
         label,
         recipientName,
         phone,

@@ -1,9 +1,4 @@
-<<<<<<< HEAD
-const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient();
-=======
 const { prisma } = require('database');
->>>>>>> 18373dc (code review)
 
 // Ambil semua ulasan untuk produk tertentu
 const getProductReviews = async (req, res) => {

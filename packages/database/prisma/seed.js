@@ -9,10 +9,7 @@ async function main() {
     where: { code: 'KOPDES-001' },
     update: {},
     create: {
-<<<<<<< HEAD
-=======
       id: 'kopdes-001',
->>>>>>> 18373dc (code review)
       code: 'KOPDES-001',
       name: 'Koperasi Desa Merah Putih (Pusat)',
       description: 'Koperasi percontohan utama untuk program Merah Putih',
@@ -31,10 +28,7 @@ async function main() {
     where: { email: 'admin@merahputih.id' },
     update: {},
     create: {
-<<<<<<< HEAD
-=======
       id: 'super_admin_id',
->>>>>>> 18373dc (code review)
       email: 'admin@merahputih.id',
       password: 'hashed_password_placeholder',
       name: 'Super Admin Pusat',
@@ -53,24 +47,12 @@ async function main() {
   ];
 
   for (const cat of categories) {
-<<<<<<< HEAD
-    await prisma.category.upsert({
-      where: { slug_kopdesId: { slug: cat.slug, kopdesId: '' } }, // Dummy where since we don't know the exact unique constraint matching here. Wait, schema says @@unique([slug, kopdesId]). But kopdesId is optional. If null, Prisma might complain about unique on null. Let's just create them.
-      update: {},
-      create: { ...cat }
-    }).catch(async (e) => {
-        // Fallback for optional fields
-        const existing = await prisma.category.findFirst({ where: { slug: cat.slug }});
-        if (!existing) await prisma.category.create({ data: cat });
-    });
-=======
     const existing = await prisma.category.findFirst({ where: { slug: cat.slug, kopdesId: null } });
     if (!existing) {
       await prisma.category.create({ data: cat });
     } else {
       await prisma.category.update({ where: { id: existing.id }, data: cat });
     }
->>>>>>> 18373dc (code review)
   }
   console.log('✅ Categories created');
 
@@ -197,8 +179,6 @@ async function main() {
     }
   }
 
-<<<<<<< HEAD
-=======
   // 6. Buat Dummy Transactions (POS)
   console.log('Membuat dummy transactions...');
   for (let i = 1; i <= 5; i++) {
@@ -252,7 +232,6 @@ async function main() {
   }
   console.log('✅ Deposits created');
 
->>>>>>> 18373dc (code review)
   console.log('Seeder selesai! 🎉');
 }
 

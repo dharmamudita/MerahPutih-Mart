@@ -1,4 +1,5 @@
 'use client';
+import { apiFetch } from '../../../lib/api';
 import { useState, useEffect } from 'react';
 import { Activity, AlertTriangle, PackageSearch, Clock, RefreshCcw } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -17,11 +18,11 @@ export default function MonitoringOperasional() {
     setLoading(true);
     try {
       if (activeTab === 'TRANSAKSI') {
-        const res = await fetch('http://localhost:5000/api/superadmin/monitoring/transactions');
+        const res = await apiFetch('/superadmin/monitoring/transactions');
         const json = await res.json();
         if (json.success) setTransactions(json.data);
       } else {
-        const res = await fetch('http://localhost:5000/api/superadmin/monitoring/stock');
+        const res = await apiFetch('/superadmin/monitoring/stock');
         const json = await res.json();
         if (json.success) setCriticalStocks(json.data);
       }

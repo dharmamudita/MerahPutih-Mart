@@ -1,4 +1,5 @@
 'use client';
+import { apiFetch } from '../../../lib/api';
 import { useState, useEffect } from 'react';
 import { CreditCard, CheckCircle, XCircle, Clock, Eye, Download } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -13,7 +14,7 @@ export default function SetoranHarian() {
 
   const fetchDeposits = async () => {
     try {
-      const res = await fetch('http://localhost:5000/api/superadmin/deposits');
+      const res = await apiFetch('/superadmin/deposits');
       const json = await res.json();
       if (json.success) setDeposits(json.data);
     } catch (error) {
@@ -27,7 +28,7 @@ export default function SetoranHarian() {
     if (!confirm(`Apakah Anda yakin ingin mem-${status === 'VERIFIED' ? 'verifikasi' : 'tolak'} setoran ini?`)) return;
     
     try {
-      const res = await fetch(`http://localhost:5000/api/superadmin/deposits/${id}/verify`, {
+      const res = await apiFetch(`/superadmin/deposits/${id}/verify`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status })

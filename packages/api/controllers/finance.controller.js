@@ -31,9 +31,15 @@ const addCashFlow = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Data tidak lengkap.' });
     }
 
+    const targetKopdes = req.user.kopdesId || kopdesId || (await prisma.kopdes.findFirst());
+    if (!targetKopdes) {
+      return res.status(400).json({ success: false, message: 'Kopdes ID wajib diisi.' });
+    }
+    const targetKopdesId = typeof targetKopdes === 'string' ? targetKopdes : targetKopdes.id;
+
     const newCashFlow = await prisma.cashFlow.create({
       data: {
-        kopdesId: req.user.kopdesId || kopdesId,
+        kopdesId: targetKopdesId,
         type,
         category,
         amount: parseFloat(amount),

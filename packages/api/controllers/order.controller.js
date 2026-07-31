@@ -1,9 +1,4 @@
-<<<<<<< HEAD
-const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient();
-=======
 const { prisma } = require('database');
->>>>>>> 18373dc (code review)
 
 const checkout = async (req, res) => {
   try {
@@ -14,19 +9,58 @@ const checkout = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Keranjang kosong.' });
     }
 
-    // Hitung subtotal
-    const subtotal = items.reduce((acc, item) => acc + (item.price * item.quantity), 0);
+    // Fetch products untuk harga & nama real (bukan input client)
+    const productIds = [...new Set(items.map(i => i.productId))];
+    const products = await prisma.product.findMany({ where: { id: { in: productIds } } });
+    const productMap = new Map(products.map(p => [p.id, p]));
+
+    // Hitung subtotal dari harga DB
+    let subtotal = 0;
+    const orderItems = items.map(item => {
+      const product = productMap.get(item.productId);
+      if (!product) throw new Error(`Produk tidak ditemukan: ${item.productId}`);
+      const qty = item.quantity || 1;
+
+      // Validasi stok cukup
+      if (product.stockQuantity < qty) {
+        throw new Error(`Stok ${product.name} tidak cukup (tersisa ${product.stockQuantity}, diminta ${qty}).`);
+      }
+
+      const unitPrice = product.discountPrice && product.discountPrice > 0 ? product.discountPrice : product.sellPrice;
+      subtotal += unitPrice * qty;
+      return {
+        productId: item.productId,
+        productName: product.name,
+        quantity: qty,
+        unitPrice,
+        totalPrice: unitPrice * qty
+      };
+    });
     const shippingCost = deliveryMethod === 'DELIVERY' ? 10000 : 0;
-    
-    // Hitung diskon (mock logic for voucher)
+
+    // Hitung diskon (lookup voucher dari DB)
     let discountAmount = 0;
-    if (voucherCode === 'DISKONKOPDES') {
-      discountAmount = 15000;
+    if (voucherCode) {
+      const voucher = await prisma.voucher.findUnique({ where: { code: voucherCode } });
+      if (!voucher || !voucher.isActive) throw new Error('Kode voucher tidak valid.');
+      const now = new Date();
+      if (now < voucher.startDate || now > voucher.endDate) throw new Error('Voucher sudah tidak berlaku.');
+      if (voucher.minPurchase && subtotal < voucher.minPurchase) {
+        throw new Error(`Minimal belanja Rp ${voucher.minPurchase.toLocaleString('id-ID')} untuk voucher ini.`);
+      }
+      if (voucher.maxUsage && voucher.usedCount >= voucher.maxUsage) throw new Error('Voucher sudah habis.');
+      discountAmount = voucher.type === 'PERCENTAGE'
+        ? Math.min((subtotal * voucher.value) / 100, voucher.maxDiscount || Infinity)
+        : voucher.value;
+      await prisma.voucher.update({
+        where: { id: voucher.id },
+        data: { usedCount: { increment: 1 } }
+      });
     }
 
     // Poin discount
     const pointsDiscount = pointsUsed > 0 ? pointsUsed * 100 : 0;
-    
+
     const grandTotal = subtotal + shippingCost - discountAmount - pointsDiscount;
 
     // Generate Invoice Number
@@ -36,36 +70,34 @@ const checkout = async (req, res) => {
 
     // Get Customer ID
     let customer = await prisma.customer.findUnique({ where: { userId } });
-    
+
+    // Ambil kopdesId — fallback ke kopdes pertama
+    const targetKopdes = kopdesId || (await prisma.kopdes.findFirst());
+    if (!targetKopdes) throw new Error('Tidak ada data kopdes.');
+    const targetKopdesId = typeof targetKopdes === 'string' ? targetKopdes : targetKopdes.id;
+
     const newOrder = await prisma.$transaction(async (tx) => {
       // 1. Create Order
       const order = await tx.order.create({
         data: {
           orderNo,
-          userId,
-          kopdesId: kopdesId || (await tx.kopdes.findFirst()).id,
-          customerId: customer?.id || null,
+          user: { connect: { id: userId } },
+          kopdes: { connect: { id: targetKopdesId } },
+          customer: customer ? { connect: { id: customer.id } } : undefined,
           type: deliveryMethod === 'DELIVERY' ? 'DELIVERY' : 'PICKUP',
           status: 'WAITING_PAYMENT',
           subtotal,
           discountAmount,
           shippingCost,
           totalAmount: grandTotal,
-          paymentMethod: paymentMethod, // e.g. TRANSFER, QRIS, COD (Need to add to Prisma enum if not exist, or store as string if nullable. Oh wait PaymentMethod enum might be strict. Let's assume it maps to string or we use notes if error). 
-          // Wait, Prisma PaymentMethod might be CASH, TRANSFER, QRIS. Let's pass it.
+          paymentMethod: paymentMethod,
           addressId: shippingAddressId,
           notes,
           voucherCode,
           pointsUsed,
-          
+
           items: {
-            create: items.map(item => ({
-              productId: item.productId,
-              productName: 'Product', // Should fetch actual name, keeping simple
-              quantity: item.quantity,
-              unitPrice: item.price,
-              totalPrice: item.price * item.quantity
-            }))
+            create: orderItems
           },
           statusHistory: {
             create: {
@@ -97,11 +129,7 @@ const checkout = async (req, res) => {
       for (const item of items) {
         await tx.product.update({
           where: { id: item.productId },
-<<<<<<< HEAD
-          data: { stock: { decrement: item.quantity } }
-=======
           data: { stockQuantity: { decrement: item.quantity } }
->>>>>>> 18373dc (code review)
         });
       }
 
@@ -183,10 +211,16 @@ const getAllOrders = async (req, res) => {
 const updateOrderStatus = async (req, res) => {
   try {
     const { status } = req.body;
-    const orderId = req.params.id;
+    const identifier = req.params.id;
 
-    const order = await prisma.order.update({
-      where: { id: orderId },
+    // Cari order by id atau orderNo
+    const order = await prisma.order.findFirst({
+      where: { OR: [{ id: identifier }, { orderNo: identifier }] }
+    });
+    if (!order) return res.status(404).json({ success: false, message: 'Pesanan tidak ditemukan.' });
+
+    const updated = await prisma.order.update({
+      where: { id: order.id },
       data: {
         status,
         statusHistory: {
@@ -197,7 +231,7 @@ const updateOrderStatus = async (req, res) => {
         }
       }
     });
-    res.status(200).json({ success: true, data: order, message: 'Status pesanan berhasil diperbarui.' });
+    res.status(200).json({ success: true, data: updated, message: 'Status pesanan berhasil diperbarui.' });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Gagal memperbarui status pesanan.' });
   }

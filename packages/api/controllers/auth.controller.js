@@ -162,29 +162,6 @@ const updateProfile = async (req, res) => {
       data: { name }
     });
     
-<<<<<<< HEAD
-    // Perbarui tabel Customer jika ada
-    let updatedCustomer = null;
-    const existingCustomer = await prisma.customer.findUnique({
-      where: { userId: req.user.id }
-    });
-    
-    if (existingCustomer) {
-      updatedCustomer = await prisma.customer.update({
-        where: { userId: req.user.id },
-        data: { phone }
-      });
-    }
-
-    res.status(200).json({ 
-      success: true, 
-      message: 'Profil berhasil diperbarui.',
-      data: {
-        id: updatedUser.id,
-        name: updatedUser.name,
-        email: updatedUser.email,
-        phone: updatedCustomer ? updatedCustomer.phone : null
-=======
     // Update phone di User (Customer model tidak punya field phone)
     let updatedData = { ...updatedUser };
     if (phone !== undefined) {
@@ -203,7 +180,6 @@ const updateProfile = async (req, res) => {
         name: updatedData.name,
         email: updatedData.email,
         phone: updatedData.phone || null
->>>>>>> 18373dc (code review)
       }
     });
   } catch (error) {

@@ -5,43 +5,12 @@ const { prisma } = require('database');
  */
 const checkoutPOS = async (req, res) => {
   try {
-<<<<<<< HEAD
-    const { items, kopdesId } = req.body;
-    
-=======
     const { items, kopdesId, paymentMethod, amountPaid } = req.body;
 
->>>>>>> 18373dc (code review)
     if (!items || items.length === 0) {
       return res.status(400).json({ success: false, message: 'Keranjang kosong.' });
     }
 
-<<<<<<< HEAD
-    const totalAmount = items.reduce((acc, item) => acc + (item.price * item.qty), 0);
-
-    const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-    const randomStr = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
-    const invoiceNumber = `POS-${dateStr}-${randomStr}`;
-
-    const newOrder = await prisma.$transaction(async (prisma) => {
-      // 1. Buat record Order POS (customerId null karena offline, status DONE, payment PAID)
-      const order = await prisma.order.create({
-        data: {
-          invoiceNumber,
-          kopdesId: req.user.kopdesId || kopdesId || null,
-          totalAmount,
-          status: 'DONE',
-          paymentStatus: 'PAID',
-          shippingType: 'PICKUP',
-          notes: 'Transaksi Offline POS',
-          
-          items: {
-            create: items.map(item => ({
-              productId: item.id,
-              quantity: item.qty,
-              price: item.price
-            }))
-=======
     // Hitung total dan ambil data produk
     const productIds = items.map(item => item.productId || item.id);
     const products = await prisma.product.findMany({
@@ -79,7 +48,11 @@ const checkoutPOS = async (req, res) => {
     const changeAmount = amountPaid ? amountPaid - totalAmount : 0;
 
     // Ambil kopdesId — fallback ke kopdes pertama
-    const targetKopdesId = req.user.kopdesId || kopdesId || (await prisma.kopdes.findFirst()).id;
+    const fallbackKopdes = await prisma.kopdes.findFirst();
+    if (!fallbackKopdes) {
+      return res.status(400).json({ success: false, message: 'Tidak ada data kopdes.' });
+    }
+    const targetKopdesId = req.user.kopdesId || kopdesId || fallbackKopdes.id;
 
     const newOrder = await prisma.$transaction(async (tx) => {
       // 1. Buat record Order POS
@@ -108,34 +81,12 @@ const checkoutPOS = async (req, res) => {
                 totalPrice: price * qty
               };
             })
->>>>>>> 18373dc (code review)
           }
         }
       });
 
       // 2. Kurangi stok produk
       for (const item of items) {
-<<<<<<< HEAD
-        await prisma.product.update({
-          where: { id: item.id },
-          data: {
-            stockQuantity: {
-              decrement: item.qty
-            }
-          }
-        });
-      }
-
-      // 3. Catat Arus Kas Masuk (Pemasukan)
-      await prisma.cashFlow.create({
-        data: {
-          kopdesId: req.user.kopdesId || kopdesId,
-          type: 'IN',
-          category: 'SALES',
-          amount: totalAmount,
-          description: `Pendapatan dari penjualan POS (Invoice: ${invoiceNumber})`,
-          referenceId: order.id
-=======
         const pid = item.productId || item.id;
         await tx.product.update({
           where: { id: pid },
@@ -152,24 +103,16 @@ const checkoutPOS = async (req, res) => {
           amount: totalAmount,
           description: `Pendapatan dari penjualan POS (Invoice: ${orderNo})`,
           reference: order.id
->>>>>>> 18373dc (code review)
         }
       });
 
       return order;
     });
 
-<<<<<<< HEAD
-    res.status(201).json({ 
-      success: true, 
-      message: 'Transaksi POS berhasil.', 
-      data: newOrder 
-=======
     res.status(201).json({
       success: true,
       message: 'Transaksi POS berhasil.',
       data: newOrder
->>>>>>> 18373dc (code review)
     });
   } catch (error) {
     console.error('POS Checkout error:', error);

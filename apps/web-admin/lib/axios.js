@@ -12,15 +12,9 @@ const api = axios.create({
 // Request Interceptor
 api.interceptors.request.use(
   (config) => {
-    // Coba ambil token dari localStorage jika ada (untuk nanti)
+    // Ambil token dari localStorage jika ada
     if (typeof window !== 'undefined') {
-      let token = localStorage.getItem('token');
-      // DEV MOCK: Auto inject token jika kosong
-      if (!token && process.env.NODE_ENV === 'development') {
-        token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImNtczMzbmlvdzAwMDF0azZncDFyaWUyYmciLCJyb2xlIjoiU1VQRVJfQURNSU4iLCJrb3BkZXNJZCI6ImNtczMzbmlvNzAwMDB0azZnM2h0OW5mZHAiLCJpYXQiOjE3ODUzMzQ3ODMsImV4cCI6MTc4NzkyNjc4M30.Q2sL5-ShH0R3uQzvrQ99zCNGUm8bFzE4WUUo85UiACQ';
-        localStorage.setItem('token', token);
-      }
-      
+      const token = localStorage.getItem('token');
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
       }
