@@ -1,7 +1,8 @@
 .container {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 32px;
+  animation: fadeInUp 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 .pageHeader {
@@ -11,10 +12,11 @@
 }
 
 .pageTitle {
-  font-size: 24px;
+  font-size: 28px;
   font-weight: 800;
   color: var(--neutral-900);
   margin-bottom: 4px;
+  letter-spacing: -0.5px;
 }
 
 .pageSubtitle {
@@ -23,14 +25,15 @@
 }
 
 .dateBadge {
-  background-color: var(--white);
-  padding: 8px 16px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.8));
+  backdrop-filter: blur(12px);
+  padding: 10px 20px;
   border-radius: 999px;
   font-size: 13px;
-  font-weight: 600;
-  color: var(--neutral-600);
-  border: 1px solid var(--neutral-200);
-  box-shadow: var(--shadow-sm);
+  font-weight: 700;
+  color: var(--primary-700);
+  border: 1px solid var(--primary-200);
+  box-shadow: 0 4px 12px rgba(225, 29, 72, 0.08);
 }
 
 .kpiGrid {
@@ -40,11 +43,22 @@
 }
 
 .kpiCard {
-  background: var(--white);
-  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.85) 100%);
+  backdrop-filter: blur(24px) saturate(190%);
+  -webkit-backdrop-filter: blur(24px) saturate(190%);
+  border-radius: 22px;
   padding: 24px;
-  box-shadow: var(--shadow-sm);
-  border: 1px solid var(--neutral-200);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.04), inset 0 1px 1px rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.kpiCard:hover {
+  box-shadow: 0 20px 40px rgba(225, 29, 72, 0.14);
+  transform: translateY(-5px) scale(1.008);
+  border-color: rgba(225, 29, 72, 0.3);
 }
 
 .kpiHeader {
@@ -55,24 +69,25 @@
 }
 
 .kpiTitle {
-  font-size: 14px;
-  font-weight: 600;
+  font-size: 13px;
+  font-weight: 700;
   color: var(--neutral-500);
+  text-transform: uppercase;
 }
 
 .kpiIcon {
-  width: 40px;
-  height: 40px;
-  border-radius: 12px;
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.iconGreen { background: #DCFCE7; color: #16A34A; }
-.iconBlue { background: #DBEAFE; color: #2563EB; }
-.iconPurple { background: #F3E8FF; color: #9333EA; }
-.iconOrange { background: #FEF3C7; color: #D97706; }
+.iconGreen { background: rgba(16, 185, 129, 0.1); color: #10b981; }
+.iconBlue { background: rgba(59, 130, 246, 0.1); color: #3b82f6; }
+.iconPurple { background: rgba(168, 85, 247, 0.1); color: #a855f7; }
+.iconOrange { background: rgba(245, 158, 11, 0.1); color: #f59e0b; }
 
 .kpiValue {
   font-size: 28px;
@@ -88,18 +103,19 @@
   display: flex;
   align-items: center;
   gap: 4px;
+  font-weight: 600;
 }
 
 .trendUp {
-  color: #16A34A;
-  font-weight: 600;
+  color: #10b981;
+  font-weight: 700;
   display: flex;
   align-items: center;
 }
 
 .trendDown {
-  color: #DC2626;
-  font-weight: 600;
+  color: #ef4444;
+  font-weight: 700;
   display: flex;
   align-items: center;
 }
@@ -111,11 +127,13 @@
 }
 
 .chartCard, .alertCard {
-  background: var(--white);
-  border-radius: 16px;
-  padding: 24px;
-  box-shadow: var(--shadow-sm);
-  border: 1px solid var(--neutral-200);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.85) 100%);
+  backdrop-filter: blur(24px) saturate(190%);
+  -webkit-backdrop-filter: blur(24px) saturate(190%);
+  border-radius: 22px;
+  padding: 26px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.04);
+  border: 1px solid rgba(226, 232, 240, 0.8);
 }
 
 .cardHeader {
@@ -126,17 +144,19 @@
 }
 
 .cardTitle {
-  font-size: 16px;
-  font-weight: 700;
+  font-size: 18px;
+  font-weight: 800;
   color: var(--neutral-900);
 }
 
 .select {
-  padding: 6px 12px;
-  border-radius: 6px;
+  padding: 8px 16px;
+  border-radius: 10px;
   border: 1px solid var(--neutral-300);
   font-size: 13px;
+  font-weight: 600;
   outline: none;
+  background: white;
 }
 
 .chartContainer {
@@ -145,12 +165,12 @@
 }
 
 .badgeDanger {
-  background: var(--danger-bg);
-  color: var(--danger);
-  padding: 4px 12px;
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+  padding: 6px 14px;
   border-radius: 999px;
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 800;
 }
 
 .alertList {
@@ -162,21 +182,24 @@
 .alertItem {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding-bottom: 16px;
-  border-bottom: 1px solid var(--neutral-100);
+  gap: 14px;
+  padding: 12px;
+  border-radius: 14px;
+  background: white;
+  border: 1px solid var(--neutral-200);
+  transition: all 0.2s ease;
 }
 
-.alertItem:last-child {
-  border-bottom: none;
-  padding-bottom: 0;
+.alertItem:hover {
+  border-color: var(--primary-300);
+  box-shadow: 0 4px 12px rgba(225, 29, 72, 0.08);
 }
 
 .alertIcon {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: var(--neutral-100);
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: rgba(239, 68, 68, 0.1);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -188,28 +211,30 @@
 
 .alertName {
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--neutral-900);
-  margin-bottom: 4px;
+  margin-bottom: 2px;
 }
 
 .alertStatus {
-  font-size: 13px;
+  font-size: 12px;
   color: var(--neutral-500);
 }
 
 .restockBtn {
-  padding: 6px 12px;
+  padding: 8px 16px;
   font-size: 12px;
-  font-weight: 600;
-  color: var(--primary-600);
+  font-weight: 700;
+  color: var(--primary-700);
   background: var(--primary-50);
-  border: 1px solid var(--primary-100);
-  border-radius: 6px;
+  border: 1px solid var(--primary-200);
+  border-radius: 10px;
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .restockBtn:hover {
-  background: var(--primary-100);
+  background: var(--primary-600);
+  color: white;
 }
+
