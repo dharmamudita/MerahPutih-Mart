@@ -124,22 +124,6 @@ function BelanjaContent() {
               </div>
             )}
           </div>
-          
-          {/* Live Search Bar */}
-          <div style={{ position: 'relative', width: '320px' }}>
-            <Search size={18} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'var(--neutral-400)' }} />
-            <input 
-              type="text" 
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Cari sembako di halaman ini..." 
-              style={{
-                width: '100%', padding: '12px 14px 12px 42px', borderRadius: '14px',
-                border: '1px solid var(--neutral-300)', outline: 'none', fontSize: '14px',
-                boxSizing: 'border-box', background: 'white', boxShadow: '0 2px 8px rgba(0,0,0,0.04)'
-              }}
-            />
-          </div>
         </div>
 
         {/* Product Grid */}

@@ -1,12 +1,12 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { Search, ShoppingCart, MapPin, LogOut, LayoutGrid, Sparkles, HeartPulse, Sprout, Tag, Coffee, User, Package, Heart, Bell, Check } from 'lucide-react';
 import useCartStore from '../store/cartStore';
 import styles from './Navbar.module.css';
 
-export default function Navbar() {
+function NavbarContent() {
   const [mounted, setMounted] = useState(false);
   const [user, setUser] = useState(null);
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -17,6 +17,7 @@ export default function Navbar() {
   const totalItems = useCartStore((state) => state.getTotalItems());
   const pathname = usePathname();
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   useEffect(() => {
     setMounted(true);
@@ -44,12 +45,30 @@ export default function Navbar() {
     return () => document.removeEventListener('click', handleClickOutside);
   }, []);
 
+  useEffect(() => {
+    if (pathname === '/belanja') {
+      setSearchQuery(searchParams.get('search') || '');
+    }
+  }, [pathname, searchParams]);
+
   const handleSearchSubmit = (e) => {
     e.preventDefault();
     if (searchQuery.trim()) {
       router.push(`/belanja?search=${encodeURIComponent(searchQuery.trim())}`);
     } else {
       router.push('/belanja');
+    }
+  };
+
+  const handleSearchChange = (e) => {
+    const val = e.target.value;
+    setSearchQuery(val);
+    if (pathname === '/belanja') {
+      if (val.trim()) {
+        router.replace(`/belanja?search=${encodeURIComponent(val.trim())}`);
+      } else {
+        router.replace('/belanja');
+      }
     }
   };
 
@@ -111,7 +130,7 @@ export default function Navbar() {
             <input 
               type="text" 
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={handleSearchChange}
               placeholder="Cari sembako, snack, atau kebutuhan..." 
               className={styles.searchInput}
             />
@@ -247,5 +266,13 @@ export default function Navbar() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function Navbar() {
+  return (
+    <Suspense fallback={null}>
+      <NavbarContent />
+    </Suspense>
   );
 }
