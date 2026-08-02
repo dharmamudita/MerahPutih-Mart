@@ -60,59 +60,10 @@ function BelanjaContent() {
   });
 
   return (
-    <div className="container animate-fade-in" style={{ padding: '40px 20px', display: 'flex', gap: '32px', minHeight: '80vh' }}>
+    <div className="container animate-fade-in" style={{ padding: '40px 20px', minHeight: '80vh' }}>
       
-      {/* Sidebar Kategori */}
-      <aside style={{ width: '260px', flexShrink: 0 }}>
-        <div className="liquid-glass-card" style={{ padding: '24px', position: 'sticky', top: '110px' }}>
-          <h2 style={{ fontSize: '18px', fontWeight: '800', marginBottom: '20px', color: 'var(--neutral-900)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Filter size={18} color="var(--primary-600)" /> Kategori Produk
-          </h2>
-          <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            <li>
-              <button 
-                onClick={() => setSelectedCategory('')}
-                style={{
-                  width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                  padding: '10px 14px', borderRadius: '12px', fontSize: '14px', fontWeight: '700',
-                  background: selectedCategory === '' ? 'var(--primary-50)' : 'transparent',
-                  color: selectedCategory === '' ? 'var(--primary-700)' : 'var(--neutral-700)',
-                  border: selectedCategory === '' ? '1px solid var(--primary-200)' : '1px solid transparent',
-                  cursor: 'pointer', transition: 'all 0.2s'
-                }}
-              >
-                <span>Semua Komoditas</span>
-                <span style={{ backgroundColor: 'white', padding: '2px 8px', borderRadius: '12px', fontSize: '11px', fontWeight: '800', color: 'var(--primary-600)', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
-                  {products.length}
-                </span>
-              </button>
-            </li>
-            {categories.map((cat) => (
-              <li key={cat.id}>
-                <button 
-                  onClick={() => setSelectedCategory(cat.id)}
-                  style={{
-                    width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                    padding: '10px 14px', borderRadius: '12px', fontSize: '14px', fontWeight: '600',
-                    background: selectedCategory === cat.id ? 'var(--primary-50)' : 'transparent',
-                    color: selectedCategory === cat.id ? 'var(--primary-700)' : 'var(--neutral-700)',
-                    border: selectedCategory === cat.id ? '1px solid var(--primary-200)' : '1px solid transparent',
-                    cursor: 'pointer', transition: 'all 0.2s'
-                  }}
-                >
-                  <span>{cat.name}</span>
-                  <span style={{ backgroundColor: 'var(--neutral-100)', padding: '2px 8px', borderRadius: '12px', fontSize: '11px', color: 'var(--neutral-600)' }}>
-                    {cat._count?.products || 0}
-                  </span>
-                </button>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </aside>
-
       {/* Main Content */}
-      <main style={{ flex: 1 }}>
+      <main>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '28px', flexWrap: 'wrap', gap: '16px' }}>
           <div>
             <h1 style={{ fontSize: '28px', fontWeight: '900', color: 'var(--neutral-900)', letterSpacing: '-0.5px' }}>
