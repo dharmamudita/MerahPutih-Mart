@@ -6,7 +6,7 @@
 
 .sidebar {
   width: var(--sidebar-width);
-  background-color: var(--neutral-900);
+  background: linear-gradient(180deg, #991b1b 0%, #450a0a 100%);
   color: var(--white);
   display: flex;
   flex-direction: column;
@@ -16,7 +16,8 @@
   bottom: 0;
   z-index: 50;
   overflow-y: auto;
-  border-right: 1px solid var(--neutral-800);
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 4px 0 20px rgba(0, 0, 0, 0.15);
 }
 
 .mainContent {
@@ -33,20 +34,21 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  border-bottom: 1px solid var(--neutral-800);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
 }
 
 .logoBadge {
   width: 40px;
   height: 40px;
-  background-color: var(--primary-600);
-  color: white;
+  background-color: var(--white);
+  color: var(--primary-800);
   border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 800;
+  font-weight: 900;
   font-size: 18px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
 }
 
 .logoText {
@@ -58,11 +60,12 @@
   font-weight: 700;
   font-size: 16px;
   letter-spacing: 0.5px;
+  color: var(--white);
 }
 
 .logoSubtitle {
   font-size: 12px;
-  color: var(--neutral-400);
+  color: rgba(255, 255, 255, 0.7);
 }
 
 .sidebarNav {
@@ -76,7 +79,7 @@
 .navGroup {
   font-size: 11px;
   font-weight: 700;
-  color: var(--neutral-500);
+  color: rgba(255, 255, 255, 0.6);
   margin-bottom: 12px;
   margin-top: 16px;
   padding-left: 12px;
@@ -88,21 +91,22 @@
   align-items: center;
   padding: 12px;
   border-radius: 8px;
-  color: var(--neutral-300);
+  color: rgba(255, 255, 255, 0.8);
   transition: all 0.2s;
   cursor: pointer;
   position: relative;
 }
 
 .navItem:hover {
-  background-color: var(--neutral-800);
+  background-color: rgba(255, 255, 255, 0.15);
   color: var(--white);
 }
 
 .navItem.active {
-  background-color: var(--primary-600);
+  background-color: rgba(255, 255, 255, 0.25);
   color: var(--white);
-  font-weight: 600;
+  font-weight: 700;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .navIcon {

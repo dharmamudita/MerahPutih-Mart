@@ -31,6 +31,15 @@ export default function Navbar() {
     } else if (storedUser === 'undefined') {
       localStorage.removeItem('user');
     }
+
+    const handleClickOutside = (e) => {
+      if (!e.target.closest(`.${styles.userContainer}`) && !e.target.closest(`.${styles.notifContainer}`)) {
+        setDropdownOpen(false);
+        setNotifDropdownOpen(false);
+      }
+    };
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
   }, []);
 
   const fetchNotifications = async () => {
@@ -80,7 +89,7 @@ export default function Navbar() {
         <div className={`container ${styles.navContent}`}>
           {/* Logo */}
           <Link href="/" className={styles.logo}>
-            <div className={styles.logoIcon}>MP</div>
+            <img src="/logo.png" alt="Logo Kopdes" style={{ height: '38px', width: 'auto', objectFit: 'contain', borderRadius: '6px' }} />
             <div className={styles.logoText}>
               MerahPutih<br/><span>Mart</span>
             </div>
@@ -117,7 +126,7 @@ export default function Navbar() {
             </Link>
 
             {mounted && user && (
-              <div className={styles.notifContainer} onMouseLeave={() => setNotifDropdownOpen(false)}>
+              <div className={styles.notifContainer}>
                 <button className={styles.cartBtn} onClick={() => setNotifDropdownOpen(!notifDropdownOpen)} title="Notifikasi">
                   <Bell size={20} />
                   {unreadNotifCount > 0 && (
@@ -158,7 +167,7 @@ export default function Navbar() {
             <div className={styles.divider}></div>
             
             {mounted && user ? (
-              <div className={styles.userContainer} onMouseLeave={() => setDropdownOpen(false)}>
+              <div className={styles.userContainer}>
                 <div className={styles.userBadge} onClick={() => setDropdownOpen(!dropdownOpen)}>
                   <div className={styles.userAvatar}>
                     {user.name.charAt(0).toUpperCase()}

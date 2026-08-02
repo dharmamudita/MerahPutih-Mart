@@ -38,7 +38,7 @@ export default function Sidebar() {
   return (
     <aside className={styles.sidebar}>
       <div className={styles.sidebarHeader}>
-        <div className={styles.logoBadge}>KD</div>
+        <img src="/logo.png" alt="Logo Kopdes" style={{ height: '40px', width: '40px', objectFit: 'contain', borderRadius: '8px', background: 'white', padding: '2px' }} />
         <div className={styles.logoText}>
           <div className={styles.logoTitle}>Admin Kopdes</div>
           <div className={styles.logoSubtitle}>Merah Putih</div>

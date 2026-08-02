@@ -18,19 +18,17 @@ export default function Sidebar() {
   ];
 
   return (
-    <div style={{ width: 'var(--sidebar-width)', height: '100vh', backgroundColor: 'var(--neutral-900)', color: 'white', position: 'fixed', left: 0, top: 0, display: 'flex', flexDirection: 'column' }}>
-      <div style={{ padding: '32px 24px', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+    <div style={{ width: 'var(--sidebar-width)', height: '100vh', background: 'linear-gradient(180deg, #881337 0%, #4c0519 100%)', color: 'white', position: 'fixed', left: 0, top: 0, display: 'flex', flexDirection: 'column', boxShadow: '4px 0 20px rgba(0,0,0,0.15)' }}>
+      <div style={{ padding: '32px 24px', borderBottom: '1px solid rgba(255,255,255,0.15)' }}>
         <h1 style={{ color: 'white', fontSize: '20px', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'linear-gradient(135deg, var(--primary-500), var(--primary-600))', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            MP
-          </div>
+          <img src="/logo.png" alt="Logo Kopdes" style={{ height: '38px', width: '38px', objectFit: 'contain', borderRadius: '8px', background: 'white', padding: '2px', boxShadow: '0 4px 10px rgba(0,0,0,0.2)' }} />
           <span style={{ letterSpacing: '0.5px' }}>Pusat Kendali</span>
         </h1>
-        <div style={{ fontSize: '11px', color: 'var(--neutral-400)', marginTop: '4px', paddingLeft: '44px' }}>Super Admin Portal</div>
+        <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.7)', marginTop: '4px', paddingLeft: '48px' }}>Super Admin Portal</div>
       </div>
       
       <div style={{ flex: 1, overflowY: 'auto', padding: '24px 16px' }}>
-        <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--neutral-500)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '16px', paddingLeft: '16px' }}>
+        <div style={{ fontSize: '11px', fontWeight: '700', color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '16px', paddingLeft: '16px' }}>
           Main Menu
         </div>
         <ul style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -41,12 +39,13 @@ export default function Sidebar() {
               <li key={item.name}>
                 <Link href={item.path} style={{
                   display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '12px',
-                  backgroundColor: isActive ? 'rgba(255,255,255,0.1)' : 'transparent',
-                  color: isActive ? 'var(--primary-300)' : 'var(--neutral-400)',
-                  fontWeight: isActive ? '600' : '500',
+                  backgroundColor: isActive ? 'rgba(255,255,255,0.2)' : 'transparent',
+                  color: isActive ? '#ffffff' : 'rgba(255,255,255,0.75)',
+                  fontWeight: isActive ? '700' : '500',
+                  boxShadow: isActive ? '0 4px 12px rgba(0,0,0,0.15)' : 'none',
                   transition: 'all 0.2s ease'
                 }}>
-                  <Icon size={20} color={isActive ? 'var(--primary-400)' : 'var(--neutral-500)'} />
+                  <Icon size={20} color={isActive ? '#ffffff' : 'rgba(255,255,255,0.7)'} />
                   {item.name}
                 </Link>
               </li>

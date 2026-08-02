@@ -39,8 +39,9 @@ export default function LoginPage() {
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#f8fafc' }}>
       <form onSubmit={handleSubmit} style={{ width: '100%', maxWidth: '400px', background: 'white', padding: '40px', borderRadius: '16px', boxShadow: '0 4px 24px rgba(0,0,0,0.08)', border: '1px solid #e2e8f0' }}>
         <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+          <img src="/logo.png" alt="Logo Kopdes" style={{ height: '56px', width: 'auto', objectFit: 'contain', marginBottom: '12px' }} />
           <h1 style={{ fontSize: '22px', fontWeight: '800', color: '#1e293b', margin: 0 }}>Pusat Kendali</h1>
-          <p style={{ fontSize: '14px', color: '#64748b', margin: '8px 0 0' }}>Super Admin MerahPutih-Mart</p>
+          <p style={{ fontSize: '14px', color: '#64748b', margin: '4px 0 0' }}>Super Admin MerahPutih-Mart</p>
         </div>
 
         <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#334155', marginBottom: '6px' }}>Email</label>
