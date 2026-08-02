@@ -8,10 +8,10 @@ import { Toaster } from 'react-hot-toast';
 export default function AdminLayoutWrapper({ children }) {
   const pathname = usePathname();
   
-  // Jika halaman adalah POS, jangan tampilkan Sidebar dan Header Admin
-  if (pathname && pathname.startsWith('/pos')) {
+  // Jika halaman adalah POS atau Login, jangan tampilkan Sidebar dan Header Admin
+  if (pathname && (pathname.startsWith('/pos') || pathname.startsWith('/login'))) {
     return (
-      <div style={{ backgroundColor: 'var(--neutral-100)', minHeight: '100vh' }}>
+      <div style={{ backgroundColor: 'var(--neutral-50)', minHeight: '100vh' }}>
         {children}
         <Toaster position="top-right" />
       </div>
