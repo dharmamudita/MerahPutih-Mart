@@ -1,10 +1,22 @@
 'use client';
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import styles from './AdminLayout.module.css';
 import { Bell, Search, Menu, User, AlertTriangle, ShoppingBag, CheckCircle } from 'lucide-react';
 
 export default function Header() {
+  const router = useRouter();
   const [showNotifications, setShowNotifications] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const handleSearchSubmit = (e) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      router.push(`/produk?search=${encodeURIComponent(searchQuery.trim())}`);
+    } else {
+      router.push('/produk');
+    }
+  };
 
   const notifications = [
     { id: 1, title: 'Pesanan Online Masuk', desc: 'Warga Siti Aminah memesan 2 item sembako', time: '5m lalu', icon: ShoppingBag, color: 'var(--info)' },
@@ -18,10 +30,16 @@ export default function Header() {
         <button className={styles.mobileMenuBtn}>
           <Menu size={24} />
         </button>
-        <div className={styles.searchBox}>
+        <form onSubmit={handleSearchSubmit} className={styles.searchBox}>
           <Search size={18} className={styles.searchIcon} />
-          <input type="text" placeholder="Cari transaksi, produk, atau pelanggan..." className={styles.searchInput} />
-        </div>
+          <input 
+            type="text" 
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Cari produk, transaksi, atau pelanggan..." 
+            className={styles.searchInput} 
+          />
+        </form>
       </div>
       
       <div className={styles.headerRight} style={{ position: 'relative' }}>

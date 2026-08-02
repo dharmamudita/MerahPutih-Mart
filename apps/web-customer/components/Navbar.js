@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { Search, ShoppingCart, MapPin, LogOut, LayoutGrid, Sparkles, HeartPulse, Sprout, Tag, Coffee, User, Package, Heart, Bell, Check } from 'lucide-react';
 import useCartStore from '../store/cartStore';
 import styles from './Navbar.module.css';
@@ -13,8 +13,10 @@ export default function Navbar() {
   const [notifications, setNotifications] = useState([]);
   const [unreadNotifCount, setUnreadNotifCount] = useState(0);
   const [notifDropdownOpen, setNotifDropdownOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const totalItems = useCartStore((state) => state.getTotalItems());
   const pathname = usePathname();
+  const router = useRouter();
 
   useEffect(() => {
     setMounted(true);
@@ -41,6 +43,15 @@ export default function Navbar() {
     document.addEventListener('click', handleClickOutside);
     return () => document.removeEventListener('click', handleClickOutside);
   }, []);
+
+  const handleSearchSubmit = (e) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      router.push(`/belanja?search=${encodeURIComponent(searchQuery.trim())}`);
+    } else {
+      router.push('/belanja');
+    }
+  };
 
   const fetchNotifications = async () => {
     try {
@@ -96,16 +107,18 @@ export default function Navbar() {
           </Link>
 
           {/* Search Bar */}
-          <div className={styles.searchContainer}>
+          <form onSubmit={handleSearchSubmit} className={styles.searchContainer}>
             <input 
               type="text" 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Cari sembako, snack, atau kebutuhan..." 
               className={styles.searchInput}
             />
-            <button className={styles.searchBtn}>
+            <button type="submit" className={styles.searchBtn}>
               <Search size={18} />
             </button>
-          </div>
+          </form>
 
           {/* Actions */}
           <div className={styles.actions}>

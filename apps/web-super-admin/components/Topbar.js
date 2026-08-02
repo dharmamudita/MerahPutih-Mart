@@ -1,9 +1,21 @@
 'use client';
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Bell, Search, UserCircle, AlertTriangle, Building2, Wallet } from 'lucide-react';
 
 export default function Topbar() {
+  const router = useRouter();
   const [showNotif, setShowNotif] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const handleSearchSubmit = (e) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      router.push(`/kopdes?search=${encodeURIComponent(searchQuery.trim())}`);
+    } else {
+      router.push('/kopdes');
+    }
+  };
 
   const notifs = [
     { id: 1, title: 'Setoran Harian Baru', desc: 'Kopdes Merah Putih Bandung menyetor Rp 1.500.000', time: '2m lalu', icon: Wallet, color: 'var(--success)' },
@@ -13,10 +25,16 @@ export default function Topbar() {
 
   return (
     <div className="glass-panel" style={{ height: '80px', position: 'sticky', top: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 32px', borderBottom: '1px solid var(--neutral-200)' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', background: 'white', padding: '10px 16px', borderRadius: '12px', border: '1px solid var(--neutral-200)', width: '320px' }}>
+      <form onSubmit={handleSearchSubmit} style={{ display: 'flex', alignItems: 'center', gap: '12px', background: 'white', padding: '10px 16px', borderRadius: '12px', border: '1px solid var(--neutral-200)', width: '320px' }}>
         <Search size={18} color="var(--neutral-400)" />
-        <input type="text" placeholder="Cari Kopdes, ID Transaksi..." style={{ border: 'none', outline: 'none', background: 'transparent', width: '100%', fontSize: '14px' }} />
-      </div>
+        <input 
+          type="text" 
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder="Cari Kopdes, ID Transaksi, User..." 
+          style={{ border: 'none', outline: 'none', background: 'transparent', width: '100%', fontSize: '14px' }} 
+        />
+      </form>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: '24px', position: 'relative' }}>
         <div style={{ position: 'relative', cursor: 'pointer' }} onClick={() => setShowNotif(!showNotif)}>
